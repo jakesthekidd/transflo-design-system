@@ -1,0 +1,14 @@
+@import "primeicons/primeicons.css";
+
+/* Global resets for Storybook */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+  font-size: 14px;
+  color: var(--p-text-color, #1e293b);
+  background: var(--p-surface-ground, #f8fafc);
+}

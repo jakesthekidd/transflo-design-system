@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MenuItem } from 'primeng/api';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideRouter } from '@angular/router';
 
 const meta: Meta = {
   title: 'PrimeNG/Navigation/Steps',
@@ -17,7 +18,7 @@ type Story = StoryObj;
 export const Steps: Story = {
   render: () => ({
     moduleMetadata: { imports: [StepsModule] },
-    applicationConfig: { providers: [provideAnimationsAsync()] },
+    applicationConfig: { providers: [provideAnimationsAsync(), provideRouter([])] },
     props: {
       activeIndex: 1,
       items: [

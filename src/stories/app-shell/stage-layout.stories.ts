@@ -75,11 +75,27 @@ import { SideNavComponent } from './side-nav.stories';
           <!-- Z1 bottom: Off-white body -->
           <div class="stage-body" [class.stage-body--tabs]="navType === 'tabs'">
 
-            <!-- Z3: White content card — overlaps up into the blue header -->
+            <!-- Z3: White content card — clips overflow, inner area scrolls -->
             <div class="stage-content" [class.stage-content--tabs]="navType === 'tabs'">
-              <div class="stage-content__placeholder" *ngIf="showPlaceholder">
-                <i class="pi pi-inbox stage-content__placeholder-icon"></i>
-                <p>Page content renders here</p>
+              <div class="stage-content__scroll">
+
+                <!-- Demo tall content -->
+                <div *ngIf="showDemoContent" class="stage-content__demo">
+                  <h2>Scrollable Content Demo</h2>
+                  <p *ngFor="let _ of demoBlocks; let i = index">
+                    Block {{ i + 1 }} — Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                  </p>
+                </div>
+
+                <!-- Empty state placeholder -->
+                <div class="stage-content__placeholder" *ngIf="showPlaceholder && !showDemoContent">
+                  <i class="pi pi-inbox stage-content__placeholder-icon"></i>
+                  <p>Page content renders here</p>
+                </div>
+
               </div>
             </div>
 
@@ -101,10 +117,10 @@ import { SideNavComponent } from './side-nav.stories';
       overflow: hidden;
     }
 
-    /* Z0 right — 24px padding on all sides creates gap around Z1 panel */
+    /* Z0 right — 12px padding on all sides creates gap around Z1 panel */
     .stage-main {
       flex: 1;
-      padding: 24px;
+      padding: 12px;
       display: flex;
       min-width: 0;
     }
@@ -129,8 +145,8 @@ import { SideNavComponent } from './side-nav.stories';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
-      height: 68px;
+      padding: 0 20px;
+      height: 48px;
       box-sizing: border-box;
     }
 
@@ -181,11 +197,11 @@ import { SideNavComponent } from './side-nav.stories';
     .stage-header__divider {
       height: 1px;
       background: rgba(255,255,255,0.25);
-      margin: 0 24px;
+      margin: 0 20px;
     }
 
     .stage-header__breadcrumb-row {
-      padding: 14px 24px 22px 24px;
+      padding: 10px 20px 14px 20px;
       display: flex;
       align-items: center;
     }
@@ -220,7 +236,7 @@ import { SideNavComponent } from './side-nav.stories';
 
     /* Tabs variant — underline style */
     .stage-header__tabs-row {
-      padding: 14px 24px 18px 24px;
+      padding: 8px 20px 12px 20px;
       display: flex;
       align-items: center;
     }
@@ -269,7 +285,7 @@ import { SideNavComponent } from './side-nav.stories';
     .stage-body {
       flex: 1;
       background: #F3F5F7;
-      padding: 0 24px 24px 24px;
+      padding: 0 12px 12px 12px;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -281,11 +297,54 @@ import { SideNavComponent } from './side-nav.stories';
       background: #ffffff;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-      overflow: auto;
+      overflow: hidden;
       min-height: 0;
       margin-top: -10px;
       position: relative;
       z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Inner scroll area — handles overflow so the card itself stays clean */
+    .stage-content__scroll {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+      padding: 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Subtle scrollbar styling */
+    .stage-content__scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+    .stage-content__scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .stage-content__scroll::-webkit-scrollbar-thumb {
+      background: #D1D5DB;
+      border-radius: 4px;
+    }
+    .stage-content__scroll::-webkit-scrollbar-thumb:hover {
+      background: #9CA3AF;
+    }
+
+    .stage-content__demo {
+      font-family: sans-serif;
+      color: #374151;
+      line-height: 1.6;
+    }
+
+    .stage-content__demo h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      color: #111827;
+    }
+
+    .stage-content__demo p {
+      margin: 0 0 16px 0;
+      font-size: 14px;
     }
 
     /* Tabs variant — same overlap behavior as breadcrumbs, card stays as a full rounded panel */
@@ -330,6 +389,8 @@ export class StageLayoutComponent {
     { id: 'settings',  label: 'Settings'  },
   ];
   @Input() activeTab = 'overview';
+  @Input() showDemoContent = false;
+  demoBlocks = Array.from({ length: 20 });
 }
 
 // ─── Meta ─────────────────────────────────────────────────────────────────────
@@ -412,6 +473,21 @@ export const DeepBreadcrumb: Story = {
     activeNavItem: 'loads',
     showPlaceholder: true,
     navType:       'breadcrumbs',
+  },
+};
+
+export const WithScrollingContent: Story = {
+  args: {
+    pageTitle:       'Untitled Workflow',
+    pageIcon:        'pi pi-share-alt',
+    breadcrumbs:     ['Workflow Generator', 'Workflow Builder'],
+    activeNavItem:   'workflows',
+    navType:         'breadcrumbs',
+    showPlaceholder: false,
+    showDemoContent: true,
+  },
+  parameters: {
+    docs: { description: { story: 'Demonstrates that tall content scrolls within the content card without breaking the layout.' } },
   },
 };
 

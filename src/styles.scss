@@ -1,4 +1,62 @@
 @import "primeicons/primeicons.css";
+@import "quill/dist/quill.snow.css";
+
+/* Quill / PrimeNG Editor — readable text overrides */
+.p-editor-container,
+.ql-snow {
+  .ql-editor {
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.55;
+
+    &.ql-blank::before {
+      color: #9CA3AF;
+      font-style: normal;
+      opacity: 1;
+    }
+
+    h1, h2, h3, h4, h5, h6,
+    p, li, blockquote, span, strong, em, u {
+      color: #111827;
+    }
+
+    a { color: #2474BB; }
+  }
+
+  .ql-toolbar {
+    background: #F7F8F9 !important;             /* slate.100 */
+    border-color: #C6CCD6 !important;           /* slate.500 — darker, visible frame */
+
+    .ql-stroke,
+    .ql-stroke-miter   { stroke: #717B8B !important; stroke-width: 1.8 !important; }   /* slate.800 */
+    .ql-fill,
+    .ql-even           { fill:   #717B8B !important; }
+
+    .ql-picker,
+    .ql-picker-label,
+    .ql-picker-item,
+    .ql-picker-label::before,
+    .ql-picker-item::before,
+    button             { color: #717B8B !important; }
+
+    button:hover .ql-stroke,
+    .ql-active .ql-stroke,
+    button:focus .ql-stroke    { stroke: #2474BB !important; }
+    button:hover .ql-fill,
+    .ql-active .ql-fill,
+    button:focus .ql-fill      { fill:   #2474BB !important; }
+    button:hover,
+    button:focus,
+    .ql-active,
+    .ql-active .ql-picker-label,
+    .ql-picker-label:hover     { color:  #2474BB !important; }
+  }
+
+  /* Editor body / outer container border — match the toolbar so the whole component reads as one card */
+  .ql-container,
+  &.ql-container        { border-color: #C6CCD6 !important; }
+  .p-editor-content     { border-color: #C6CCD6 !important; }
+}
 
 /* Global resets for Storybook */
 *, *::before, *::after {

@@ -40,60 +40,60 @@ import { SelectModule } from 'primeng/select';
     .cc-label {
       font-size: 12px;
       font-weight: 500;
-      color: #4B5563;
+      color: var(--c-surface-900);
       padding-left: 4px;
     }
 
     .cc-label--error {
-      color: #4B5563;
+      color: var(--c-surface-900);
     }
 
     .cc-required {
-      color: #EF4444;
+      color: var(--c-red-500);
       margin-left: 2px;
     }
 
     .cc-select-wrapper {
       border-radius: 20px;
-      border: 1.5px solid #1E40AF;
-      background: #ffffff;
+      border: 1.5px solid var(--c-blue-700);
+      background: var(--c-surface-0);
       overflow: hidden;
       transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
     }
 
     .cc-select-wrapper--default {
-      border-color: #1E40AF;
-      background: #ffffff;
+      border-color: var(--c-blue-700);
+      background: var(--c-surface-0);
     }
 
     .cc-select-wrapper--hover {
-      border-color: #1E40AF;
-      background: #ffffff;
+      border-color: var(--c-blue-700);
+      background: var(--c-surface-0);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     }
 
     .cc-select-wrapper--focus {
-      border-color: #1E40AF;
+      border-color: var(--c-blue-700);
       border-width: 2px;
-      background: #ffffff;
+      background: var(--c-surface-0);
       box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
     }
 
     .cc-select-wrapper--active {
-      border-color: #1E40AF;
+      border-color: var(--c-blue-700);
       border-width: 2px;
-      background: #ffffff;
+      background: var(--c-surface-0);
       box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
     }
 
     .cc-select-wrapper--error {
-      border-color: #EF4444;
-      background: #ffffff;
+      border-color: var(--c-red-500);
+      background: var(--c-surface-0);
     }
 
     .cc-select-wrapper--disabled {
-      border-color: #D1D5DB;
-      background: #F9FAFB;
+      border-color: var(--c-surface-500);
+      background: var(--c-surface-100);
       opacity: 0.55;
       pointer-events: none;
     }
@@ -125,15 +125,15 @@ import { SelectModule } from 'primeng/select';
     :host ::ng-deep .cc-select .p-select-label {
       padding: 9px 4px 9px 14px !important;
       font-size: 14px !important;
-      color: #1F2937 !important;
+      color: var(--c-bluegray-900) !important;
     }
 
     :host ::ng-deep .cc-select .p-select-label.p-placeholder {
-      color: #9CA3AF !important;
+      color: var(--c-surface-600) !important;
     }
 
     :host ::ng-deep .cc-select .p-select-dropdown {
-      color: #1E40AF !important;
+      color: var(--c-blue-700) !important;
       padding-right: 12px;
     }
   `]
@@ -171,8 +171,8 @@ const meta: Meta<CcSelectComponent> = {
     backgrounds: {
       default: 'light-gray',
       values: [
-        { name: 'light-gray', value: '#F3F4F6' },
-        { name: 'white', value: '#FFFFFF' },
+        { name: 'light-gray', value: 'var(--c-surface-200)' },
+        { name: 'white', value: 'var(--c-surface-0)' },
       ],
     },
   },

@@ -108,8 +108,8 @@ import { TooltipModule } from 'primeng/tooltip';
       justify-content: space-between;
       height: 56px;
       padding: 0 24px;
-      background: #ffffff;
-      border-bottom: 1px solid #E5E7EB;
+      background: var(--c-surface-0);
+      border-bottom: 1px solid var(--c-surface-400);
       font-family: sans-serif;
     }
 
@@ -122,7 +122,7 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .header-toolbar__logo-text {
-      color: #2474BB;
+      color: var(--c-blue-500);
       font-weight: 800;
       font-size: 20px;
       letter-spacing: 0.5px;
@@ -130,7 +130,7 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .header-toolbar__logo-r {
-      color: #2474BB;
+      color: var(--c-blue-500);
       font-size: 9px;
       font-weight: 700;
       margin-top: -8px;
@@ -145,7 +145,7 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .header-toolbar__link {
-      color: #2474BB;
+      color: var(--c-blue-500);
       text-decoration: none;
       font-size: 13px;
       font-weight: 500;
@@ -166,21 +166,21 @@ import { TooltipModule } from 'primeng/tooltip';
       background: transparent;
       border: none;
       border-radius: 6px;
-      color: #6B7280;
+      color: var(--c-surface-800);
       cursor: pointer;
       font-size: 18px;
       transition: background 0.15s, color 0.15s;
     }
 
     .header-toolbar__icon-btn:hover {
-      background: #F3F4F6;
-      color: #374151;
+      background: var(--c-surface-200);
+      color: var(--c-bluegray-700);
     }
 
     .header-toolbar__icon-btn--active,
     .header-toolbar__icon-btn--active:hover {
-      background: #2474BB;
-      color: #ffffff;
+      background: var(--c-blue-500);
+      color: var(--c-surface-0);
     }
 
     /* Avatar */
@@ -191,8 +191,8 @@ import { TooltipModule } from 'primeng/tooltip';
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: #374151;
-      color: #ffffff;
+      background: var(--c-bluegray-700);
+      color: var(--c-surface-0);
       font-size: 11px;
       font-weight: 700;
       border: none;
@@ -210,7 +210,7 @@ import { TooltipModule } from 'primeng/tooltip';
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
-      background: #ffffff;
+      background: var(--c-surface-0);
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
       z-index: 1000;
@@ -248,15 +248,15 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .apps-grid__app:hover {
-      background: #F9FAFB;
+      background: var(--c-surface-100);
     }
 
     .apps-grid__app--active {
-      background: #2474BB;
+      background: var(--c-blue-500);
     }
 
     .apps-grid__app--active .apps-grid__label {
-      color: #ffffff;
+      color: var(--c-surface-0);
     }
 
     .apps-grid__icon-wrap {
@@ -266,20 +266,20 @@ import { TooltipModule } from 'primeng/tooltip';
       width: 38px;
       height: 38px;
       border-radius: 8px;
-      background: #DBEAFE;
-      color: #2474BB;
+      background: var(--c-blue-100);
+      color: var(--c-blue-500);
       font-size: 18px;
     }
 
     .apps-grid__app--active .apps-grid__icon-wrap {
-      background: #ffffff;
-      color: #2474BB;
+      background: var(--c-surface-0);
+      color: var(--c-blue-500);
     }
 
     .apps-grid__label {
       font-size: 11px;
       font-weight: 600;
-      color: #2474BB;
+      color: var(--c-blue-500);
       max-width: 84px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -293,10 +293,10 @@ import { TooltipModule } from 'primeng/tooltip';
       margin-top: 16px;
       margin-left: auto;
       padding: 8px 14px;
-      background: #ffffff;
-      border: 1px solid #2474BB;
+      background: var(--c-surface-0);
+      border: 1px solid var(--c-blue-500);
       border-radius: 6px;
-      color: #2474BB;
+      color: var(--c-blue-500);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
@@ -304,7 +304,7 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .apps-return:hover {
-      background: #F0F7FF;
+      background: var(--c-blue-50);
     }
 
     .apps-return__icon {
@@ -313,8 +313,8 @@ import { TooltipModule } from 'primeng/tooltip';
       justify-content: center;
       width: 16px;
       height: 16px;
-      background: #2474BB;
-      color: #ffffff;
+      background: var(--c-blue-500);
+      color: var(--c-surface-0);
       font-style: italic;
       font-weight: 800;
       font-size: 10px;
@@ -336,7 +336,7 @@ import { TooltipModule } from 'primeng/tooltip';
       height: 24px;
       background: transparent;
       border: none;
-      color: #6B7280;
+      color: var(--c-surface-800);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -346,7 +346,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
     .user-menu__email {
       font-size: 12px;
-      color: #374151;
+      color: var(--c-bluegray-700);
       margin-bottom: 14px;
       margin-top: 4px;
     }
@@ -358,8 +358,8 @@ import { TooltipModule } from 'primeng/tooltip';
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: #374151;
-      color: #ffffff;
+      background: var(--c-bluegray-700);
+      color: var(--c-surface-0);
       font-size: 16px;
       font-weight: 700;
       margin: 0 auto 10px auto;
@@ -368,17 +368,17 @@ import { TooltipModule } from 'primeng/tooltip';
 
     .user-menu__greeting {
       font-size: 14px;
-      color: #111827;
+      color: var(--c-bluegray-900);
       margin-bottom: 14px;
     }
 
     .user-menu__settings-btn {
       width: 100%;
       padding: 8px 14px;
-      background: #EFF6FF;
+      background: var(--c-blue-50);
       border: none;
       border-radius: 6px;
-      color: #2474BB;
+      color: var(--c-blue-500);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
@@ -387,7 +387,7 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .user-menu__settings-btn:hover {
-      background: #DBEAFE;
+      background: var(--c-blue-100);
     }
 
     .user-menu__links {
@@ -400,17 +400,17 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .user-menu__links a {
-      color: #6B7280;
+      color: var(--c-surface-800);
       text-decoration: none;
     }
 
     .user-menu__links a:hover {
-      color: #374151;
+      color: var(--c-bluegray-700);
       text-decoration: underline;
     }
 
     .user-menu__dot {
-      color: #6B7280;
+      color: var(--c-surface-800);
     }
 
     .user-menu__actions {
@@ -426,8 +426,8 @@ import { TooltipModule } from 'primeng/tooltip';
       justify-content: center;
       width: 32px;
       height: 32px;
-      background: #374151;
-      color: #ffffff;
+      background: var(--c-bluegray-700);
+      color: var(--c-surface-0);
       border: none;
       border-radius: 50%;
       cursor: pointer;
@@ -436,7 +436,7 @@ import { TooltipModule } from 'primeng/tooltip';
     }
 
     .user-menu__action-btn:hover {
-      background: #1F2937;
+      background: var(--c-bluegray-900);
     }
   `],
 })

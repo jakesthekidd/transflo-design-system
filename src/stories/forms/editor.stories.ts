@@ -97,21 +97,21 @@ import { EditorModule } from 'primeng/editor';
       margin-bottom: 6px;
       font-size: 13px;
       font-weight: 600;
-      color: #374151;
+      color: var(--c-bluegray-700);
     }
     .editor-wrap__output {
       margin-top: 12px;
       padding: 10px 12px;
-      background: #F9FAFB;
-      border: 1px solid #E5E7EB;
+      background: var(--c-surface-100);
+      border: 1px solid var(--c-surface-400);
       border-radius: 6px;
       font-size: 12px;
-      color: #374151;
+      color: var(--c-bluegray-700);
     }
     .editor-wrap__output-label {
       font-weight: 600;
       margin-bottom: 4px;
-      color: #6B7280;
+      color: var(--c-surface-800);
     }
     .editor-wrap__output pre {
       margin: 0;

@@ -1,5 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap');
 @import "primeicons/primeicons.css";
 @import "quill/dist/quill.snow.css";
+
+/* ── Transflo design tokens (sourced from Figma Tokens / Mobile Light) ──────
+   Every custom component references these via var(--c-<family>-<shade>),
+   so updating a hex here cascades through the whole design system. */
+:root {
+  /* Blue */
+  --c-blue-50:  #E9F1F8; --c-blue-100: #D3E3F1; --c-blue-200: #A7C7E4;
+  --c-blue-300: #7CACD6; --c-blue-400: #5090C9; --c-blue-500: #2474BB;
+  --c-blue-600: #2068A8; --c-blue-700: #1D5D96; --c-blue-800: #164670;
+  --c-blue-900: #0E2E4B;
+
+  /* Cyan */
+  --c-cyan-50:  #F1FAFE; --c-cyan-100: #E3F5FD; --c-cyan-200: #C7EBFB;
+  --c-cyan-300: #AAE1F8; --c-cyan-400: #8ED7F6; --c-cyan-500: #72CDF4;
+  --c-cyan-600: #67B8DC; --c-cyan-700: #5BA4C3; --c-cyan-800: #447B92;
+  --c-cyan-900: #2E5262;
+
+  /* Teal */
+  --c-teal-50:  #F3FBFB; --c-teal-100: #C7EEEA; --c-teal-200: #9AE0D9;
+  --c-teal-300: #6DD3C8; --c-teal-400: #41C5B7; --c-teal-500: #14B8A6;
+  --c-teal-600: #119C8D; --c-teal-700: #0E8174; --c-teal-800: #0B655B;
+  --c-teal-900: #084A42;
+
+  /* Green */
+  --c-green-50:  #E5F9EA; --c-green-100: #CCF2D6; --c-green-200: #99E5AC;
+  --c-green-300: #66D983; --c-green-400: #33CC59; --c-green-500: #00BF30;
+  --c-green-600: #00AC2B; --c-green-700: #009926; --c-green-800: #00731D;
+  --c-green-900: #004C13;
+
+  /* Yellow */
+  --c-yellow-50:  #FEFDE8; --c-yellow-100: #FEFAD2; --c-yellow-200: #FCF5A4;
+  --c-yellow-300: #FBF177; --c-yellow-400: #F9EC49; --c-yellow-500: #F8E71C;
+  --c-yellow-600: #DFD019; --c-yellow-700: #C6B916; --c-yellow-800: #958B11;
+  --c-yellow-900: #635C0B;
+
+  /* Orange */
+  --c-orange-50:  #FFF6E5; --c-orange-100: #FFEDCC; --c-orange-200: #FFDA99;
+  --c-orange-300: #FFC866; --c-orange-400: #FFB533; --c-orange-500: #FFA300;
+  --c-orange-600: #E59300; --c-orange-700: #CC8200; --c-orange-800: #996200;
+  --c-orange-900: #664100;
+
+  /* Red */
+  --c-red-50:  #FBE9EA; --c-red-100: #F8D2D5; --c-red-200: #F0A5AB;
+  --c-red-300: #E97980; --c-red-400: #E14C56; --c-red-500: #DA1F2C;
+  --c-red-600: #C41C28; --c-red-700: #AE1923; --c-red-800: #83131A;
+  --c-red-900: #570C12;
+
+  /* Pink */
+  --c-pink-50:  #FEF6FA; --c-pink-100: #FAD3E7; --c-pink-200: #F7B0D3;
+  --c-pink-300: #F38EC0; --c-pink-400: #F06BAC; --c-pink-500: #EC4899;
+  --c-pink-600: #C93D82; --c-pink-700: #A5326B; --c-pink-800: #822854;
+  --c-pink-900: #5E1D3D;
+
+  /* Purple */
+  --c-purple-50:  #FBF7FF; --c-purple-100: #EAD6FD; --c-purple-200: #DAB6FC;
+  --c-purple-300: #C996FA; --c-purple-400: #B975F9; --c-purple-500: #A855F7;
+  --c-purple-600: #8F48D2; --c-purple-700: #763CAD; --c-purple-800: #5C2F88;
+  --c-purple-900: #432263;
+
+  /* Indigo */
+  --c-indigo-50:  #F7F7FE; --c-indigo-100: #DADAFC; --c-indigo-200: #BCBDF9;
+  --c-indigo-300: #9EA0F6; --c-indigo-400: #8183F4; --c-indigo-500: #6366F1;
+  --c-indigo-600: #5457CD; --c-indigo-700: #4547A9; --c-indigo-800: #363885;
+  --c-indigo-900: #282960;
+
+  /* Blue Gray */
+  --c-bluegray-50:  #F7F8F9; --c-bluegray-100: #DADEE3; --c-bluegray-200: #BCC3CD;
+  --c-bluegray-300: #9FA9B7; --c-bluegray-400: #818EA1; --c-bluegray-500: #64748B;
+  --c-bluegray-600: #556376; --c-bluegray-700: #465161; --c-bluegray-800: #37404C;
+  --c-bluegray-900: #282E38;
+
+  /* Surface */
+  --c-surface-0:   #FFFFFF; --c-surface-50:  #FBFCFC; --c-surface-100: #F7F8F9;
+  --c-surface-200: #F3F5F7; --c-surface-300: #EFF2F4; --c-surface-400: #E2E6EB;
+  --c-surface-500: #C6CCD6; --c-surface-600: #A9B3C2; --c-surface-700: #8D9AAE;
+  --c-surface-800: #717B8B; --c-surface-900: #5A626F;
+
+  /* Black */
+  --c-black-50:  #FAFAFA; --c-black-100: #F5F5F5; --c-black-200: #E5E5E5;
+  --c-black-300: #D4D4D4; --c-black-400: #A3A3A3; --c-black-500: #737373;
+  --c-black-600: #525252; --c-black-700: #404040; --c-black-800: #262626;
+  --c-black-900: #000000;
+
+  /* ── Text — semantic text tokens (use these in components, not raw greys) ─ */
+  --t-heading: #111827;                /* Headings — bluegray-900 family       */
+  --t-body:    #374151;                /* Body text — bluegray-700 family      */
+  --t-main:    #3D3D3D;                /* Main / default emphasis text         */
+  --t-muted:   #6B7280;                /* Captions, helper text, placeholders  */
+  --t-black:   #000000;
+  --t-dark:    #000000;
+  --t-mid:     rgba(0, 0, 0, 0.50);    /* 50% black — secondary on light bg    */
+  --t-light:   rgba(0, 0, 0, 0.30);    /* 30% black — disabled / tertiary      */
+  --t-white:   #FFFFFF;                /* For use on dark backgrounds          */
+
+  /* ── Typography ───────────────────────────────────────────────────────────
+     Standard SaaS scale built around Roboto.
+     - Sizes: xs (12) → 5xl (48). Scale ratio ≈ 1.2.
+     - Weights: 300 / 400 / 500 / 600 / 700.
+     - Line-height presets for body vs heading rhythm. */
+
+  /* Font families */
+  --font-sans: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Font weights */
+  --fw-light:    300;
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  /* Font sizes */
+  --fs-xs:   12px;   /* helper / caption / overline    */
+  --fs-sm:   13px;   /* small body / dense UI text     */
+  --fs-base: 14px;   /* default body                    */
+  --fs-md:   16px;   /* large body / lead paragraph    */
+  --fs-lg:   18px;   /* h6                              */
+  --fs-xl:   20px;   /* h5                              */
+  --fs-2xl:  24px;   /* h4                              */
+  --fs-3xl:  30px;   /* h3                              */
+  --fs-4xl:  36px;   /* h2                              */
+  --fs-5xl:  48px;   /* h1 / display                    */
+
+  /* Line heights */
+  --lh-tight:   1.2;   /* headings                     */
+  --lh-snug:    1.35;
+  --lh-normal:  1.5;   /* body                         */
+  --lh-relaxed: 1.65;  /* long-form copy               */
+
+  /* Letter spacing */
+  --ls-tight:  -0.01em;
+  --ls-normal: 0;
+  --ls-wide:   0.04em;
+  --ls-caps:   0.08em;  /* uppercase overlines / labels */
+}
+
+/* ── Typography presets — apply with these classes or copy the values ──────
+   Each combines size + weight + line-height + colour for a coherent rhythm. */
+.t-display    { font: var(--fw-bold)     var(--fs-5xl)/var(--lh-tight)  var(--font-sans); color: var(--t-heading); letter-spacing: var(--ls-tight); }
+.t-h1         { font: var(--fw-bold)     var(--fs-4xl)/var(--lh-tight)  var(--font-sans); color: var(--t-heading); letter-spacing: var(--ls-tight); }
+.t-h2         { font: var(--fw-bold)     var(--fs-3xl)/var(--lh-tight)  var(--font-sans); color: var(--t-heading); }
+.t-h3         { font: var(--fw-semibold) var(--fs-2xl)/var(--lh-snug)   var(--font-sans); color: var(--t-heading); }
+.t-h4         { font: var(--fw-semibold) var(--fs-xl)/var(--lh-snug)    var(--font-sans); color: var(--t-heading); }
+.t-h5         { font: var(--fw-semibold) var(--fs-lg)/var(--lh-snug)    var(--font-sans); color: var(--t-heading); }
+.t-h6         { font: var(--fw-semibold) var(--fs-md)/var(--lh-snug)    var(--font-sans); color: var(--t-heading); }
+.t-body-lg    { font: var(--fw-regular)  var(--fs-md)/var(--lh-relaxed) var(--font-sans); color: var(--t-body); }
+.t-body       { font: var(--fw-regular)  var(--fs-base)/var(--lh-normal) var(--font-sans); color: var(--t-body); }
+.t-body-sm    { font: var(--fw-regular)  var(--fs-sm)/var(--lh-normal) var(--font-sans); color: var(--t-body); }
+.t-label      { font: var(--fw-medium)   var(--fs-sm)/var(--lh-snug)    var(--font-sans); color: var(--t-main); }
+.t-caption    { font: var(--fw-regular)  var(--fs-xs)/var(--lh-snug)    var(--font-sans); color: var(--t-muted); }
+.t-overline   { font: var(--fw-semibold) var(--fs-xs)/var(--lh-snug)    var(--font-sans); color: var(--t-muted); text-transform: uppercase; letter-spacing: var(--ls-caps); }
+.t-code       { font: var(--fw-regular)  var(--fs-sm)/var(--lh-snug)    var(--font-mono); color: var(--t-body); }
 
 /* Quill / PrimeNG Editor — readable text overrides */
 .p-editor-container,
@@ -24,38 +177,38 @@
   }
 
   .ql-toolbar {
-    background: #F7F8F9 !important;             /* slate.100 */
-    border-color: #C6CCD6 !important;           /* slate.500 — darker, visible frame */
+    background: var(--c-surface-100) !important;
+    border-color: var(--c-surface-500) !important;
 
     .ql-stroke,
-    .ql-stroke-miter   { stroke: #717B8B !important; stroke-width: 1.8 !important; }   /* slate.800 */
+    .ql-stroke-miter   { stroke: var(--c-surface-800) !important; stroke-width: 1.8 !important; }
     .ql-fill,
-    .ql-even           { fill:   #717B8B !important; }
+    .ql-even           { fill:   var(--c-surface-800) !important; }
 
     .ql-picker,
     .ql-picker-label,
     .ql-picker-item,
     .ql-picker-label::before,
     .ql-picker-item::before,
-    button             { color: #717B8B !important; }
+    button             { color: var(--c-surface-800) !important; }
 
     button:hover .ql-stroke,
     .ql-active .ql-stroke,
-    button:focus .ql-stroke    { stroke: #2474BB !important; }
+    button:focus .ql-stroke    { stroke: var(--c-blue-500) !important; }
     button:hover .ql-fill,
     .ql-active .ql-fill,
-    button:focus .ql-fill      { fill:   #2474BB !important; }
+    button:focus .ql-fill      { fill:   var(--c-blue-500) !important; }
     button:hover,
     button:focus,
     .ql-active,
     .ql-active .ql-picker-label,
-    .ql-picker-label:hover     { color:  #2474BB !important; }
+    .ql-picker-label:hover     { color:  var(--c-blue-500) !important; }
   }
 
   /* Editor body / outer container border — match the toolbar so the whole component reads as one card */
   .ql-container,
-  &.ql-container        { border-color: #C6CCD6 !important; }
-  .p-editor-content     { border-color: #C6CCD6 !important; }
+  &.ql-container        { border-color: var(--c-surface-500) !important; }
+  .p-editor-content     { border-color: var(--c-surface-500) !important; }
 }
 
 /* Global resets for Storybook */
@@ -65,8 +218,10 @@
 
 body {
   margin: 0;
-  font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
-  font-size: 14px;
-  color: var(--p-text-color, #1e293b);
-  background: var(--p-surface-ground, #f8fafc);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+  color: var(--t-body);
+  background: var(--p-surface-ground, var(--c-surface-100));
 }

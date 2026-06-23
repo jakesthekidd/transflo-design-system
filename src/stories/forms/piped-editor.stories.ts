@@ -252,34 +252,34 @@ function buildTokenText(value: SelectedValue): string {
       margin-bottom: 6px;
       font-size: 13px;
       font-weight: 600;
-      color: #374151;
+      color: var(--c-bluegray-700);
     }
 
     .pe-helper {
       margin-bottom: 8px;
       padding: 8px 12px;
-      background: #EFF6FF;
-      border: 1px solid #BFDBFE;
+      background: var(--c-blue-50);
+      border: 1px solid var(--c-blue-200);
       border-radius: 6px;
       font-size: 12px;
-      color: #1E3A8A;
+      color: var(--c-blue-800);
     }
     .pe-helper kbd {
       display: inline-block;
       padding: 1px 6px;
-      background: #ffffff;
-      border: 1px solid #BFDBFE;
+      background: var(--c-surface-0);
+      border: 1px solid var(--c-blue-200);
       border-radius: 4px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 11px;
-      color: #1E40AF;
+      color: var(--c-blue-700);
     }
 
     .pe-editor-host { position: relative; }
 
     /* Custom toolbar button */
     :host ::ng-deep .pe-toolbar-divider {
-      border-left: 1px solid #E5E7EB;
+      border-left: 1px solid var(--c-surface-400);
       padding-left: 8px;
       margin-left: 4px;
     }
@@ -288,8 +288,8 @@ function buildTokenText(value: SelectedValue): string {
       align-items: center;
       gap: 6px;
       padding: 4px 10px !important;
-      background: #2474BB;
-      color: #ffffff;
+      background: var(--c-blue-500);
+      color: var(--c-surface-0);
       border: none;
       border-radius: 4px;
       font-size: 12px;
@@ -298,7 +298,7 @@ function buildTokenText(value: SelectedValue): string {
       width: auto !important;
       height: auto !important;
     }
-    :host ::ng-deep .pe-insert-btn:hover { background: #1E40AF; color: #ffffff; }
+    :host ::ng-deep .pe-insert-btn:hover { background: var(--c-blue-700); color: var(--c-surface-0); }
     :host ::ng-deep .pe-insert-btn i { font-size: 13px; }
 
     /* Anchored selector — positioned at cursor by JS */
@@ -312,15 +312,15 @@ function buildTokenText(value: SelectedValue): string {
     .pe-selector-cancel {
       align-self: flex-end;
       padding: 4px 12px;
-      background: #ffffff;
-      border: 1px solid #D1D5DB;
+      background: var(--c-surface-0);
+      border: 1px solid var(--c-surface-500);
       border-radius: 4px;
-      color: #6B7280;
+      color: var(--c-surface-800);
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
     }
-    .pe-selector-cancel:hover { background: #F3F4F6; color: #374151; }
+    .pe-selector-cancel:hover { background: var(--c-surface-200); color: var(--c-bluegray-700); }
 
     /* ── Variable tokens — invisible by default ─────────────────────────────
        Variables render as plain text so any user-applied formatting
@@ -346,8 +346,8 @@ function buildTokenText(value: SelectedValue): string {
     .pe-preview {
       margin-top: 12px;
       padding: 14px 16px;
-      background: #ffffff;
-      border: 1px solid #E5E7EB;
+      background: var(--c-surface-0);
+      border: 1px solid var(--c-surface-400);
       border-radius: 8px;
     }
     .pe-preview__label {
@@ -356,15 +356,15 @@ function buildTokenText(value: SelectedValue): string {
       gap: 6px;
       font-size: 11px;
       font-weight: 700;
-      color: #6B7280;
+      color: var(--c-surface-800);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 10px;
     }
-    .pe-preview__label i { color: #2474BB; font-size: 13px; }
+    .pe-preview__label i { color: var(--c-blue-500); font-size: 13px; }
     .pe-preview__content {
       font-size: 14px;
-      color: #111827;
+      color: var(--c-bluegray-900);
       line-height: 1.55;
     }
     .pe-preview__content :host ::ng-deep p,
@@ -381,15 +381,15 @@ function buildTokenText(value: SelectedValue): string {
       margin-top: 14px;
     }
     .pe-output__panel {
-      background: #F9FAFB;
-      border: 1px solid #E5E7EB;
+      background: var(--c-surface-100);
+      border: 1px solid var(--c-surface-400);
       border-radius: 6px;
       padding: 10px 12px;
     }
     .pe-output__label {
       font-size: 11px;
       font-weight: 700;
-      color: #6B7280;
+      color: var(--c-surface-800);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 6px;
@@ -398,7 +398,7 @@ function buildTokenText(value: SelectedValue): string {
       margin: 0;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px;
-      color: #111827;
+      color: var(--c-bluegray-900);
       white-space: pre-wrap;
       word-break: break-word;
     }

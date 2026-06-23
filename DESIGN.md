@@ -1,0 +1,481 @@
+# Transflo Design System
+
+> The single source of truth for how Transflo SaaS products look, feel, and compose.
+
+This document captures the visual language, component patterns, and engineering conventions used across Transflo apps. It is paired with the live Storybook ([Chromatic library](https://www.chromatic.com/library?appId=69c2ed0eb0557349d37d407f)) where every component is documented with code, props, and interactive examples.
+
+**For designers** — sections marked *🎨 Design intent* explain rationale.
+**For developers** — sections marked *🛠️ Implementation* show code patterns.
+
+---
+
+## Table of contents
+
+1. [Why this exists](#why-this-exists)
+2. [Brand fundamentals](#brand-fundamentals)
+3. [Colour system](#colour-system)
+4. [Typography](#typography)
+5. [Spacing & layout grid](#spacing--layout-grid)
+6. [Iconography](#iconography)
+7. [Z-layer architecture](#z-layer-architecture)
+8. [App Shell composition](#app-shell-composition)
+9. [Form patterns](#form-patterns)
+10. [Variable / piped-editor pattern](#variable--piped-editor-pattern)
+11. [Data Source Selector pattern](#data-source-selector-pattern)
+12. [Composition principles](#composition-principles)
+13. [Accessibility rules](#accessibility-rules)
+14. [Do's and Don'ts](#dos-and-donts)
+15. [Adopting the system in a new app](#adopting-the-system-in-a-new-app)
+
+---
+
+## Why this exists
+
+Transflo ships a portfolio of SaaS products that all share users, data, and visual ancestry. A shared system means:
+
+- **Consistency** — a driver moving between Loads, Workflows, and Telematics shouldn't relearn the interface.
+- **Velocity** — teams can compose UI from vetted components instead of redesigning primitives.
+- **Quality** — accessibility, contrast, and tokenisation are solved once, not per-app.
+
+If you are building **anything** that ships with the Transflo brand on it, start here.
+
+---
+
+## Brand fundamentals
+
+### Primary mark
+
+The wordmark is **TRANSFLO®** in italic, weight 800, brand blue, with a superscript ®. It always lives in the top-left of the app shell.
+
+### Voice
+
+- **Direct.** No filler words.
+- **Operational.** Drivers and dispatchers are at work — get to the point.
+- **Specific.** Prefer concrete units ("12 min ahead of schedule") over vague language ("ahead of schedule").
+
+### Tone in microcopy
+
+| Don't | Do |
+|---|---|
+| "There was a problem submitting your request." | "Couldn't save. Try again or contact support." |
+| "Please enter a valid email address." | "Use the format name@company.com." |
+| "Awesome! Your form was submitted successfully." | "Saved." |
+
+---
+
+## Colour system
+
+Every colour lives in `src/styles.scss` as a CSS custom property and is mirrored in Figma Tokens.
+
+### Token shape
+
+```css
+var(--c-<family>-<shade>)   /* raw palette: --c-blue-500, --c-surface-100 */
+var(--t-<role>)              /* semantic text: --t-heading, --t-body, --t-muted */
+```
+
+### Families
+
+13 raw families, each ramping `50 → 900` (surface includes a `0` for pure white):
+
+`blue · cyan · teal · green · yellow · orange · red · pink · purple · indigo · bluegray · surface · black`
+
+See live swatches: **Foundations → Colors**.
+
+### Semantic text colours
+
+Always reach for these before a raw shade. Names describe **intent**, not appearance.
+
+| Token | Hex | Use for |
+|---|---|---|
+| `--t-heading` | `#111827` | Page titles, section headings |
+| `--t-body` | `#374151` | Long-form copy, paragraphs |
+| `--t-main` | `#3D3D3D` | Default emphasis text |
+| `--t-muted` | `#6B7280` | Captions, helper text, placeholders |
+| `--t-mid` | `rgba(0,0,0,0.5)` | Secondary text on light backgrounds |
+| `--t-light` | `rgba(0,0,0,0.3)` | Disabled / tertiary text |
+| `--t-white` | `#FFFFFF` | Reverse text on dark backgrounds |
+
+### Brand & status colours
+
+| Role | Token | Use for |
+|---|---|---|
+| Primary action | `--c-blue-500` (`#2474BB`) | Default CTAs, focus ring, active state |
+| Primary hover | `--c-blue-700` | CTA hover, focus border |
+| Success | `--c-green-500` / `--c-green-700` | Confirmation, success badges |
+| Warning | `--c-orange-500` | Caution, attention-needed |
+| Danger | `--c-red-500` / `--c-red-700` | Errors, destructive actions |
+| Info | `--c-cyan-500` | Informational banners |
+| Array / template variable | `--c-purple-500`+ | Variable tokens in the piped editor |
+
+### 🎨 Design intent
+
+- **Subdue first, accent second.** Most surfaces are slate-100/200. Brand blue is reserved for hierarchy and interactive cues.
+- **The Z-layer drives surface choice** (see [Z-layer architecture](#z-layer-architecture)).
+- **Status colours are saturated** because they communicate urgency; neutrals are desaturated because they support content.
+
+### 🛠️ Implementation
+
+```css
+.my-component {
+  color: var(--t-body);
+  background: var(--c-surface-100);
+  border: 1px solid var(--c-surface-400);
+}
+.my-component:hover { background: var(--c-blue-50); }
+.my-component[aria-pressed="true"] { color: var(--c-blue-700); }
+```
+
+Never hard-code hex. If you find yourself reaching for one, the token is missing — open a PR to add it.
+
+---
+
+## Typography
+
+Transflo uses **Roboto** (UI) and **Roboto Mono** (code, file paths, template tokens). The full type scale is exposed as tokens and as utility classes.
+
+### Tokens
+
+| Group | Tokens |
+|---|---|
+| Family | `--font-sans`, `--font-mono` |
+| Weight | `--fw-light` (300), `--fw-regular` (400), `--fw-medium` (500), `--fw-semibold` (600), `--fw-bold` (700) |
+| Size | `--fs-xs` (12) · `--fs-sm` (13) · `--fs-base` (14) · `--fs-md` (16) · `--fs-lg` (18) · `--fs-xl` (20) · `--fs-2xl` (24) · `--fs-3xl` (30) · `--fs-4xl` (36) · `--fs-5xl` (48) |
+| Line-height | `--lh-tight` (1.2) · `--lh-snug` (1.35) · `--lh-normal` (1.5) · `--lh-relaxed` (1.65) |
+| Letter spacing | `--ls-tight`, `--ls-normal`, `--ls-wide`, `--ls-caps` |
+
+### Presets (utility classes)
+
+Use a preset when you want a complete style, not just one property.
+
+| Class | Pairing | Use case |
+|---|---|---|
+| `.t-display` | 48 / 700 / 1.2 | Marketing hero |
+| `.t-h1`–`.t-h6` | scale ramps down | Headings |
+| `.t-body-lg` | 16 / 400 / 1.65 | Lead paragraph |
+| `.t-body` | 14 / 400 / 1.5 | Default body |
+| `.t-body-sm` | 13 / 400 / 1.5 | Dense tables |
+| `.t-label` | 13 / 500 / 1.35 | Form labels |
+| `.t-caption` | 12 / 400 / 1.35 (muted) | Helper text |
+| `.t-overline` | 12 / 600 (uppercased, tracked) | Section labels |
+| `.t-code` | 13 / 400 mono | Inline code / tokens |
+
+See **Foundations → Typography** for live samples.
+
+### 🎨 Design intent
+
+- **A scale ratio ≈ 1.2** — predictable enough to memorise, varied enough to express hierarchy.
+- **Line-height tightens as size grows.** Bigger headings get less line-height; long-form copy gets more.
+- **Weight is hierarchy, not decoration.** Don't bold to make text "pop"; bold to indicate the start of a section.
+
+### 🛠️ Implementation
+
+```html
+<h1 class="t-h1">Loads dashboard</h1>
+<p class="t-body">Add a section to summarise what changed in this load.</p>
+<small class="t-caption">Optional. Visible only to dispatchers.</small>
+```
+
+Avoid inline `font-size` / `font-weight`. If a one-off feels necessary, build a preset for it.
+
+---
+
+## Spacing & layout grid
+
+Transflo uses a **4 px base** with these spacing intervals:
+
+`4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64`
+
+Container gaps default to **12 px** for tight zones (cards inside cards) and **24 px** for breathing room between major sections.
+
+### Rules
+
+- **Multiples of 4** for all margins, paddings, gaps.
+- **12 px gaps** between Z1 panel and Z0 shell, and between Z3 content card and Z1 body. Locked.
+- **Content card padding** is **24 px** all around.
+- **Form field height** is **40 px** (PrimeNG default).
+
+---
+
+## Iconography
+
+Three sources, in order of preference:
+
+1. **Custom Transflo SVGs** — for domain concepts (Segment, Step, Action). Stored in `src/assets/icons/`. Use `currentColor` so they tokenize.
+2. **PrimeIcons** (`pi pi-*`) — for generic UI affordances (chevron, search, settings, etc.). Already loaded globally.
+3. **Inline SVG** — for one-off icons that don't fit categories above. Always tokenise with `currentColor`.
+
+### Sizing
+
+- **Icon-only buttons** — 16 px icon inside a 36 px target.
+- **Inline icons next to text** — match the text's line-height (≈ 14–16 px).
+- **Hero illustrations** — 48 px+.
+
+---
+
+## Z-layer architecture
+
+The **Transflo signature layout pattern.** Every page is a stack of named layers.
+
+```
+┌──────────────────────────────────────────────────────┐
+│ Z0 — Outer shell (white) + Side Nav                  │
+│ ┌──────────────────────────────────────────────────┐ │
+│ │ Z1 — Stage panel                                 │ │
+│ │   • Blue header on top (#2474BB)                 │ │
+│ │   • Off-white body below (#F3F5F7)               │ │
+│ │   ┌────────────────────────────────────────────┐ │ │
+│ │   │ Z3 — Content card (white)                  │ │ │
+│ │   │   page content lives here                  │ │ │
+│ │   └────────────────────────────────────────────┘ │ │
+│ └──────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────┘
+```
+
+| Layer | Background | Purpose |
+|---|---|---|
+| **Z0** | `--c-surface-0` (`#FFFFFF`) | Outer page, side nav |
+| **Z1** | header `--c-blue-500` / body `--c-surface-200` | Stage panel — frames the page |
+| **Z3** | `--c-surface-0` (`#FFFFFF`) | Content card — where the work happens |
+
+### Rules
+
+- Z0 → Z1 gap: **12 px** all around.
+- Z1 header height: 48 px title row + 44–52 px sub-row (breadcrumbs OR tabs).
+- Z3 content card overlaps the header bottom by **10 px** (with breadcrumb variant) or **0 px** (with tab variant — the active tab visually connects to the card).
+- Z3 inner padding: **24 px** all around.
+
+### 🎨 Design intent
+
+The layered stack creates depth without skeuomorphism. It signals "you are here" (header), "this is what you can do" (content card), and "this is the chrome" (shell + side nav) at a glance.
+
+### 🛠️ Implementation
+
+Wrap any page in `<app-stage-layout>` and slot content via `<ng-content>`:
+
+```html
+<app-stage-layout
+  pageTitle="Untitled Workflow"
+  pageIcon="pi pi-share-alt"
+  navType="breadcrumbs"
+  [breadcrumbs]="['Workflow Generator', 'Workflow Builder']"
+>
+  <!-- your page goes here -->
+</app-stage-layout>
+```
+
+See **App Shell → Stage Layout** for variants.
+
+---
+
+## App Shell composition
+
+The standard Transflo SaaS layout combines three components:
+
+```
+┌─ Header Toolbar ─────────────────────────────────────┐
+│ TRANSFLO® · · · · · · · · · · ·  Dashboard ⊞ JS     │
+├────────────┬─────────────────────────────────────────┤
+│  Side Nav  │   Stage Layout                          │
+│   ⌂        │     ┌─ Z1 header ──────────────────┐    │
+│   🚚       │     │  page title · breadcrumbs    │    │
+│   📊       │     ├─ Z3 content ─────────────────┤    │
+│   ⚙        │     │                              │    │
+│            │     │  <router-outlet> or          │    │
+│            │     │  <ng-content>                │    │
+│            │     │                              │    │
+└────────────┴─────┴──────────────────────────────┴────┘
+```
+
+### Components
+
+- **`<app-header-toolbar>`** — White bar across the top with logo, page link, app switcher, user avatar.
+- **`<app-side-nav>`** — 66 px wide column with icon-only navigation.
+- **`<app-stage-layout>`** — Wraps page content with the Z-layer treatment, supports `breadcrumbs` or `tabs` for the sub-row.
+
+### Composition
+
+```html
+<app-header-toolbar />
+<div style="display:flex; height: calc(100vh - 56px);">
+  <app-side-nav [activeItem]="'workflows'" />
+  <app-stage-layout
+    pageTitle="Workflow Builder"
+    navType="tabs"
+    [tabs]="tabConfig"
+  >
+    <router-outlet />
+  </app-stage-layout>
+</div>
+```
+
+---
+
+## Form patterns
+
+Two input families coexist:
+
+### Standard PrimeNG inputs
+Use everywhere by default. Square corners (`6 px`), slate-500 border, blue-500 focus ring. Documented under **Forms**.
+
+### Command Center inputs
+Use **only** in Command Center workflows and dispatcher-facing dense screens. Pill-shaped (24+ px radius), blue-800 border, no fill. Documented under **Command Center**.
+
+### When to use which
+
+| Context | Use |
+|---|---|
+| Settings, profiles, onboarding | Standard |
+| Long forms with many fields | Standard |
+| Workflow builder, live dispatcher UI | Command Center |
+| Customer-facing apps (drivers, shippers) | Standard |
+
+The two should never mix on the same page.
+
+---
+
+## Variable / piped-editor pattern
+
+For any UI that lets users compose templates by mixing static text and dynamic variables (notification templates, dispatch macros, document fields), use **`<app-piped-editor>`**.
+
+### Concepts
+
+- **Static text** = plain text the user types.
+- **Variable token** = an atomic chunk of text representing a value at render time, e.g. `{{workflow.start-load.pre-trip.temperature}}`.
+- **Three output formats** are emitted simultaneously — `htmlChange`, `tokenChange`, `structuredChange` — so any backend can consume the content.
+
+### Behaviour rules
+
+- **`/` opens the data-source picker** at the caret (Claude-style).
+- **Variables are atomic**: one backspace deletes the whole token; the inside is uneditable.
+- **Formatting is atomic**: bold/italic/colour applied to any part of a token applies to the whole token.
+- **Arrays auto-insert as ordered list items** with a dashed purple underline.
+
+See **Forms → Piped Editor** for the full component (it's substantial; live-rendering here would be costly).
+
+---
+
+## Data Source Selector pattern
+
+For any UI that picks a value from one of multiple structured data sources, use **`<app-data-source-selector>`**. It standardises:
+
+- **Three default sources**: Workflow (3-level tree), JSON Payload (recursive object/array), Geotab (flat list).
+- **Tabbed navigation** with per-tab search.
+- **Single-select** by default; opt-in `multiSelect` for checkbox mode.
+- **Per-tab visibility flags** so each consumer can hide irrelevant sources.
+
+```html
+<app-data-source-selector
+  [workflow]="workflowData"
+  [json]="jsonPayload"
+  [geotab]="geotabItems"
+  [showJson]="false"
+  (selectionChange)="onPick($event)"
+/>
+```
+
+---
+
+## Composition principles
+
+Borrowed from Vercel's house style and adapted to Transflo:
+
+1. **Composition over configuration.** A component should have ~5 props max. If you need more, you probably need a child component.
+2. **Variants are props, not classes.** `<app-button variant="primary">` not `<app-button class="primary">`.
+3. **Sensible defaults.** A component with all defaults should look correct in 90% of cases.
+4. **Restraint with options.** Every option doubles the QA matrix. If you can't articulate when to use it, don't add it.
+5. **Inputs over magic.** Pass data in via `@Input`; don't read it from a service inside a leaf component.
+6. **Outputs over callbacks-on-data.** Emit events; let the parent decide what to do.
+
+### 🎨 Design intent
+
+The system should feel like LEGO bricks — a small set of pieces that snap together, not a Swiss Army knife with infinite settings.
+
+---
+
+## Accessibility rules
+
+Non-negotiable:
+
+- **Colour contrast** — text must meet WCAG AA (4.5:1 for body, 3:1 for large text). The semantic text tokens already meet this on `--c-surface-0/100/200`. Verify when using on coloured backgrounds.
+- **Focus visible** — every interactive element has a visible focus state. Default is a 3 px blue ring (`box-shadow: 0 0 0 3px rgba(36,116,187,0.3)`).
+- **Keyboard reachable** — anything clickable is reachable by `Tab`; anything triggerable by Enter or Space.
+- **Tooltips for icon-only buttons** — use PrimeNG `pTooltip` so screen readers and hovering users both get the affordance.
+- **`aria-label` on icon buttons** — even with a tooltip.
+- **Form labels** — always present, never just a placeholder.
+- **Error messaging** — text + colour, never colour alone.
+
+---
+
+## Do's and Don'ts
+
+### Do
+
+- ✅ Use semantic text tokens (`--t-body`, `--t-muted`) before raw palette greys.
+- ✅ Compose pages with `<app-stage-layout>` — never re-implement the Z-layer.
+- ✅ Reach for an existing PrimeNG component before designing a new one.
+- ✅ Verify in Storybook before merging — the Chromatic build catches visual regressions.
+- ✅ Add a new token to `styles.scss` if you find yourself reusing a hex.
+
+### Don't
+
+- ❌ Hard-code hex colours in component styles.
+- ❌ Hard-code font-size / weight; use the type tokens or presets.
+- ❌ Build a "more flexible" version of an existing component — extend or contribute.
+- ❌ Mix Command Center inputs with standard PrimeNG inputs in the same view.
+- ❌ Skip the focus ring "because the design doesn't show it".
+- ❌ Ship a feature without verifying contrast and keyboard reachability.
+
+---
+
+## Adopting the system in a new app
+
+### 1. Install dependencies
+```bash
+npm install primeng primeicons @primeuix/themes quill
+```
+
+### 2. Copy the theme
+```bash
+curl -O https://raw.githubusercontent.com/jakesthekidd/transflo-design-system/main/src/theme/transflo-theme.ts
+```
+
+### 3. Import the token sheet
+Add the contents of `src/styles.scss` (or import it from a shared package) so every CSS variable is defined.
+
+### 4. Wire up PrimeNG
+```typescript
+import TransfloTheme from './theme/transflo-theme';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: TransfloTheme,
+        options: { darkModeSelector: '.p-dark', cssLayer: false }
+      }
+    })
+  ]
+};
+```
+
+### 5. Pull in the App Shell
+Copy `app-shell/side-nav.stories.ts`, `app-shell/stage-layout.stories.ts`, and `app-shell/header-toolbar.stories.ts`. Extract the components (drop the `default` story export and `meta` block). They're standalone Angular components — no further wiring needed.
+
+### 6. Reference Storybook
+Add to your app's CONTRIBUTING.md:
+
+> Before designing a new screen, browse the [Transflo Storybook](https://www.chromatic.com/library?appId=69c2ed0eb0557349d37d407f). If the component exists there, use it. If it doesn't, propose it as an addition to the design system before reimplementing locally.
+
+---
+
+## Maintenance
+
+- **Token changes** ship in `src/styles.scss`. Update the matching swatch in **Foundations → Colors** if you change a hex.
+- **New components** ship as their own story under the appropriate folder (`Forms`, `Data Display`, etc.) with all states documented.
+- **Breaking changes** require a heads-up in `#design-system` (Slack) and a migration note in this file.
+
+---
+
+**Questions, suggestions, complaints?** Open an issue at [github.com/jakesthekidd/transflo-design-system](https://github.com/jakesthekidd/transflo-design-system) or message #design-system.

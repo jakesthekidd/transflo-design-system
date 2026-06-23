@@ -113,7 +113,7 @@ import { SideNavComponent } from './side-nav.stories';
       display: flex;
       width: 100%;
       height: 100vh;
-      background: #ffffff;
+      background: var(--c-surface-0);
       overflow: hidden;
     }
 
@@ -137,7 +137,7 @@ import { SideNavComponent } from './side-nav.stories';
 
     /* Z1 top — blue header */
     .stage-header {
-      background: #2474BB;
+      background: var(--c-blue-500);
       flex-shrink: 0;
     }
 
@@ -157,12 +157,12 @@ import { SideNavComponent } from './side-nav.stories';
     }
 
     .stage-header__page-icon {
-      color: #ffffff;
+      color: var(--c-surface-0);
       font-size: 20px;
     }
 
     .stage-header__title {
-      color: #ffffff;
+      color: var(--c-surface-0);
       font-size: 18px;
       font-weight: 600;
       font-family: sans-serif;
@@ -191,7 +191,7 @@ import { SideNavComponent } from './side-nav.stories';
 
     .stage-header__action-btn:hover {
       background: rgba(255,255,255,0.15);
-      color: #ffffff;
+      color: var(--c-surface-0);
     }
 
     .stage-header__divider {
@@ -225,7 +225,7 @@ import { SideNavComponent } from './side-nav.stories';
     }
 
     .stage-breadcrumb__item--active .stage-breadcrumb__label {
-      color: #ffffff;
+      color: var(--c-surface-0);
       font-weight: 600;
     }
 
@@ -266,7 +266,7 @@ import { SideNavComponent } from './side-nav.stories';
 
     .stage-tabs__tab--active,
     .stage-tabs__tab--active:hover {
-      color: #ffffff;
+      color: var(--c-surface-0);
       font-weight: 700;
     }
 
@@ -277,14 +277,14 @@ import { SideNavComponent } from './side-nav.stories';
       right: 0;
       bottom: -4px;
       height: 2px;
-      background: #ffffff;
+      background: var(--c-surface-0);
       border-radius: 1px;
     }
 
     /* Z1 bottom — off-white body, Z3 card sits on top of this */
     .stage-body {
       flex: 1;
-      background: #F3F5F7;
+      background: var(--c-surface-200);
       padding: 0 12px 12px 12px;
       display: flex;
       flex-direction: column;
@@ -294,7 +294,7 @@ import { SideNavComponent } from './side-nav.stories';
     /* Z3 — white content card, slight overlap into the bottom edge of blue header */
     .stage-content {
       flex: 1;
-      background: #ffffff;
+      background: var(--c-surface-0);
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.10);
       overflow: hidden;
@@ -323,23 +323,23 @@ import { SideNavComponent } from './side-nav.stories';
       background: transparent;
     }
     .stage-content__scroll::-webkit-scrollbar-thumb {
-      background: #D1D5DB;
+      background: var(--c-surface-500);
       border-radius: 4px;
     }
     .stage-content__scroll::-webkit-scrollbar-thumb:hover {
-      background: #9CA3AF;
+      background: var(--c-surface-600);
     }
 
     .stage-content__demo {
       font-family: sans-serif;
-      color: #374151;
+      color: var(--c-bluegray-700);
       line-height: 1.6;
     }
 
     .stage-content__demo h2 {
       margin: 0 0 16px 0;
       font-size: 18px;
-      color: #111827;
+      color: var(--c-bluegray-900);
     }
 
     .stage-content__demo p {
@@ -365,13 +365,13 @@ import { SideNavComponent } from './side-nav.stories';
       height: 100%;
       min-height: 400px;
       gap: 12px;
-      color: #9CA3AF;
+      color: var(--c-surface-600);
       font-family: sans-serif;
     }
 
     .stage-content__placeholder-icon {
       font-size: 48px;
-      color: #D1D5DB;
+      color: var(--c-surface-500);
     }
   `],
 })

@@ -15,7 +15,7 @@ import { TooltipModule } from 'primeng/tooltip';
       <div class="side-nav__logo">
         <div class="side-nav__logo-mark">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="32" height="32" rx="6" fill="#2474BB"/>
+            <rect width="32" height="32" rx="6" fill="var(--c-blue-500)"/>
             <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
               font-family="Arial, sans-serif" font-weight="800" font-size="18" fill="white">T</text>
           </svg>
@@ -57,8 +57,8 @@ import { TooltipModule } from 'primeng/tooltip';
       align-items: center;
       width: 66px;
       height: 100%;
-      background: #ffffff;
-      border-right: 1px solid #E5E7EB;
+      background: var(--c-surface-0);
+      border-right: 1px solid var(--c-surface-400);
       padding: 12px 0;
       box-sizing: border-box;
     }
@@ -96,25 +96,25 @@ import { TooltipModule } from 'primeng/tooltip';
       border: none;
       border-radius: 8px;
       background: transparent;
-      color: #6B7280;
+      color: var(--c-surface-800);
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
       font-size: 18px;
     }
 
     .side-nav__item:hover {
-      background: #F3F4F6;
-      color: #374151;
+      background: var(--c-surface-200);
+      color: var(--c-bluegray-700);
     }
 
     .side-nav__item--active {
-      background: #EFF6FF;
-      color: #2474BB;
+      background: var(--c-blue-50);
+      color: var(--c-blue-500);
     }
 
     .side-nav__item--active:hover {
-      background: #DBEAFE;
-      color: #1E40AF;
+      background: var(--c-blue-100);
+      color: var(--c-blue-700);
     }
 
     .side-nav__bottom {
@@ -134,8 +134,8 @@ import { TooltipModule } from 'primeng/tooltip';
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: #374151;
-      color: #ffffff;
+      background: var(--c-bluegray-700);
+      color: var(--c-surface-0);
       font-size: 11px;
       font-weight: 700;
       font-family: sans-serif;

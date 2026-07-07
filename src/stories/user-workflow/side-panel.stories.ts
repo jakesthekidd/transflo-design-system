@@ -58,6 +58,11 @@ import { TooltipModule } from 'primeng/tooltip';
       [style.maxWidth]="maxWidth"
     >
 
+      <!-- Single scroll container — the whole panel (header + both sections)
+           scrolls as one unit. When the panel's height is a viewport-relative
+           value (e.g. 100vh or 100%), overflow is contained here. -->
+      <div class="sp__scroll">
+
       <!-- ── Header ── -->
       <header class="sp__header">
         <div class="sp__title-row">
@@ -158,10 +163,15 @@ import { TooltipModule } from 'primeng/tooltip';
         </section>
 
       </div>
+
+      </div>
     </aside>
   `,
   styles: [`
-    :host { display: inline-block; }
+    /* height: 100% keeps the percentage chain intact so a child panel with
+       height 100% can track a viewport-sized ancestor. Resolves to auto when
+       the parent has no definite height, so fixed-height usage is unaffected. */
+    :host { display: block; height: 100%; }
 
     /* ── Panel shell ───────────────────────────────────────────────────────── */
     .sp {
@@ -170,16 +180,28 @@ import { TooltipModule } from 'primeng/tooltip';
       background: var(--c-surface-0);
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
+      overflow: hidden;                 /* clip rounded corners */
       font-family: var(--font-sans);
       color: var(--t-body);
       box-sizing: border-box;
     }
 
+    /* Single scroll container — the entire panel content (header, define
+       action, settings) scrolls together as one unit when it exceeds the
+       panel's height. Set the panel's height to a viewport-relative value
+       (e.g. 100vh, 100%) so this scroll region tracks the viewport. */
+    .sp__scroll {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
     /* ── Header ────────────────────────────────────────────────────────────── */
     .sp__header {
       padding: 14px 16px 12px 16px;
-      flex-shrink: 0;
     }
 
     .sp__title-row {
@@ -280,9 +302,6 @@ import { TooltipModule } from 'primeng/tooltip';
 
     /* ── Body / collapsible sections ───────────────────────────────────────── */
     .sp__body {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
       padding: 0 16px 16px 16px;
     }
 

@@ -6,22 +6,25 @@ import { FormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 
 /* ────────────────────────────────────────────────────────────────────────────
- * USER WORKFLOW · PARSE BARCODE INTO FIELDS
+ * USER WORKFLOW · CONFIGURE BARCODE
  *
- * A self-contained configuration block that lives inside the User Workflow
- * side panel. Lets an integrator turn a single barcode scan into several
- * structured fields without writing code.
+ * A single barcode-parsing configuration. Multiple can be stacked on a page
+ * (each numbered by its parent list). The parent supplies the `index`, and
+ * this component emits `moveUp`, `moveDown`, and `deleteRequested` so the
+ * parent stays in control of the list.
  *
- * STATES
- *   • Off          — toggle off, only the title row is visible.
- *   • On (empty)   — toggle on, no fields configured yet, split method picker
- *                    + ADD Field button visible.
- *   • Fixed length — split by character position (start → end).
- *   • Delimiter    — split by a separator character (|, comma, tab, etc.).
+ * PARSE METHODS
+ *   • fixed-length — slice the scan by 1-based character positions.
+ *   • delimiter    — split by a field delimiter, then optionally split each
+ *                    pair by a key/value delimiter (e.g. Account=123|Store=456).
+ *   • none         — capture the whole scan into a single field, no parsing.
  *
+ * FIELD LOCK
+ *   Each field is Read Only (driver can't override) or Editable (driver can
+ *   correct the parsed value at scan time). Click the lock chip to toggle.
  * ────────────────────────────────────────────────────────────────────────── */
 
-export type SplitMethod = 'fixed-length' | 'delimiter';
+export type ParseMethod = 'fixed-length' | 'delimiter' | 'none';
 
 export interface ParseField {
   id: string;
@@ -34,162 +37,242 @@ export interface ParseField {
 }
 
 @Component({
-  selector: 'uw-parse-barcode',
+  selector: 'uw-configure-barcode',
   standalone: true,
   imports: [CommonModule, FormsModule, TooltipModule],
   template: `
-    <section class="pb" [class.pb--enabled]="enabled">
+    <section class="cb" [class.cb--collapsed]="!expanded">
 
-      <!-- Header row: title + toggle -->
-      <header class="pb__head">
-        <span class="pb__title">Parse barcode into fields</span>
+      <!-- ── Header ── -->
+      <header class="cb__head">
         <button
           type="button"
-          class="pb__toggle"
-          [class.pb__toggle--on]="enabled"
-          role="switch"
-          [attr.aria-checked]="enabled"
-          (click)="setEnabled(!enabled)"
+          class="cb__chevron"
+          (click)="setExpanded(!expanded)"
+          [attr.aria-expanded]="expanded"
+          [pTooltip]="expanded ? 'Collapse' : 'Expand'"
+          tooltipPosition="bottom"
         >
-          <span class="pb__toggle-thumb"></span>
+          <i class="pi" [ngClass]="expanded ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+        </button>
+
+        <span class="cb__title">
+          <span class="cb__title-index">{{ index }}</span>
+          <input
+            type="text"
+            class="cb__title-input"
+            [ngModel]="label"
+            (ngModelChange)="setLabel($event)"
+            (click)="$event.stopPropagation()"
+            (focus)="selectAll($event)"
+            placeholder="Configure Barcode"
+            aria-label="Configuration name"
+          />
+        </span>
+
+        <span class="cb__spacer"></span>
+
+        <button type="button" class="cb__icon"
+                [disabled]="!canMoveUp"
+                (click)="moveUp.emit()"
+                pTooltip="Move up" tooltipPosition="bottom" aria-label="Move up">
+          <i class="pi pi-arrow-up"></i>
+        </button>
+        <button type="button" class="cb__icon"
+                [disabled]="!canMoveDown"
+                (click)="moveDown.emit()"
+                pTooltip="Move down" tooltipPosition="bottom" aria-label="Move down">
+          <i class="pi pi-arrow-down"></i>
+        </button>
+        <button type="button" class="cb__icon cb__icon--danger"
+                (click)="deleteRequested.emit()"
+                pTooltip="Delete configuration" tooltipPosition="bottom"
+                aria-label="Delete configuration">
+          <i class="pi pi-trash"></i>
         </button>
       </header>
 
-      <!-- Body visible only when enabled -->
-      <div class="pb__body" *ngIf="enabled">
+      <!-- ── Body ── -->
+      <div class="cb__body" *ngIf="expanded">
 
-        <!-- Split method row -->
-        <div class="pb__row">
-          <label class="pb__label">Split method</label>
-          <div class="pb__select-wrap">
-            <select
-              class="pb__select"
-              [ngModel]="splitMethod"
-              (ngModelChange)="setSplitMethod($event)"
-            >
-              <option value="fixed-length">Fixed length</option>
-              <option value="delimiter">Delimiter</option>
-            </select>
-            <i class="pi pi-chevron-down pb__select-chevron"></i>
+        <!-- Match By Prefix -->
+        <div class="cb__group">
+          <label class="cb__label">Match By Prefix:</label>
+          <input
+            type="text"
+            class="cb__input"
+            placeholder="e.g. ACCT"
+            [ngModel]="matchPrefix"
+            (ngModelChange)="setMatchPrefix($event)"
+          />
+          <div class="cb__help">
+            Optional. Use a prefix when several barcodes could fill the wrong field.
           </div>
         </div>
 
-        <!-- Separator (only for delimiter mode) -->
-        <div class="pb__row" *ngIf="splitMethod === 'delimiter'">
-          <label class="pb__label">Separator</label>
-          <input
-            class="pb__input pb__input--separator"
-            type="text"
-            maxlength="3"
-            [ngModel]="separator"
-            (ngModelChange)="setSeparator($event)"
-            placeholder="|"
-          />
+        <!-- Parse Method segmented control -->
+        <div class="cb__group">
+          <label class="cb__label">Parse Method</label>
+          <div class="cb__seg" role="tablist">
+            <button
+              type="button"
+              class="cb__seg-btn"
+              [class.cb__seg-btn--active]="parseMethod === 'fixed-length'"
+              role="tab"
+              [attr.aria-selected]="parseMethod === 'fixed-length'"
+              (click)="setParseMethod('fixed-length')"
+            >Fixed length</button>
+            <button
+              type="button"
+              class="cb__seg-btn"
+              [class.cb__seg-btn--active]="parseMethod === 'delimiter'"
+              role="tab"
+              [attr.aria-selected]="parseMethod === 'delimiter'"
+              (click)="setParseMethod('delimiter')"
+            >Delimiter</button>
+            <button
+              type="button"
+              class="cb__seg-btn"
+              [class.cb__seg-btn--active]="parseMethod === 'none'"
+              role="tab"
+              [attr.aria-selected]="parseMethod === 'none'"
+              (click)="setParseMethod('none')"
+            >None</button>
+          </div>
+        </div>
+
+        <!-- Delimiter-only: two delimiter inputs -->
+        <div class="cb__group cb__group--split" *ngIf="parseMethod === 'delimiter'">
+          <div class="cb__col">
+            <label class="cb__label">Field Delimiter</label>
+            <input
+              type="text"
+              class="cb__input cb__input--mono"
+              [ngModel]="fieldDelimiter"
+              (ngModelChange)="setFieldDelimiter($event)"
+              maxlength="3"
+            />
+          </div>
+          <div class="cb__col">
+            <label class="cb__label">Key Value Delimiter</label>
+            <input
+              type="text"
+              class="cb__input cb__input--mono"
+              [ngModel]="keyValueDelimiter"
+              (ngModelChange)="setKeyValueDelimiter($event)"
+              maxlength="3"
+            />
+          </div>
         </div>
 
         <!-- Fields section -->
-        <div class="pb__fields-label">Fields (in scan order)</div>
+        <div class="cb__group" *ngIf="parseMethod !== 'none'">
+          <label class="cb__fields-label">Fields (in scan order)</label>
 
-        <div *ngIf="fields.length" class="pb__fields">
-          <div
-            *ngFor="let field of fields; let i = index; trackBy: trackById"
-            class="pb__field"
-            [class.pb__field--dragging]="draggedIndex === i"
-            [class.pb__field--drop-target]="dropTargetIndex === i && draggedIndex !== i"
-            draggable="true"
-            (dragstart)="onDragStart($event, i)"
-            (dragover)="onDragOver($event, i)"
-            (dragleave)="onDragLeave(i)"
-            (drop)="onDrop($event, i)"
-            (dragend)="onDragEnd()"
-          >
-            <i class="pi pi-th-large pb__field-grip"
-               pTooltip="Drag to reorder" tooltipPosition="top"
-               aria-hidden="true"></i>
-
-            <input
-              type="text"
-              class="pb__field-name"
-              [ngModel]="field.name"
-              (ngModelChange)="renameField(field, $event)"
-              [attr.aria-label]="'Rename ' + field.name"
-            />
-
-            <span *ngIf="splitMethod === 'fixed-length'" class="pb__field-range">
-              <input
-                type="number"
-                class="pb__field-pos"
-                min="1"
-                [ngModel]="field.start"
-                (ngModelChange)="updateStart(field, $event)"
-              />
-              <i class="pi pi-arrow-right"></i>
-              <input
-                type="number"
-                class="pb__field-pos"
-                min="1"
-                [ngModel]="field.end"
-                (ngModelChange)="updateEnd(field, $event)"
-              />
-            </span>
-
-            <button
-              type="button"
-              class="pb__field-lock"
-              [class.pb__field-lock--editable]="!field.readOnly"
-              (click)="toggleReadOnly(field)"
-              [pTooltip]="field.readOnly ? 'Read only — click to make editable' : 'Editable — click to lock'"
-              tooltipPosition="top"
+          <div *ngIf="fields.length" class="cb__fields">
+            <div
+              *ngFor="let field of fields; let i = index; trackBy: trackById"
+              class="cb__field"
+              [class.cb__field--dragging]="draggedIndex === i"
+              [class.cb__field--drop-target]="dropTargetIndex === i && draggedIndex !== i"
+              draggable="true"
+              (dragstart)="onDragStart($event, i)"
+              (dragover)="onDragOver($event, i)"
+              (dragleave)="onDragLeave(i)"
+              (drop)="onDrop($event, i)"
+              (dragend)="onDragEnd()"
             >
-              <i class="pi" [ngClass]="field.readOnly ? 'pi-lock' : 'pi-pencil'"></i>
-              <span>{{ field.readOnly ? 'Read Only' : 'Editable' }}</span>
-            </button>
+              <i class="pi pi-th-large cb__field-grip"
+                 pTooltip="Drag to reorder" tooltipPosition="top"
+                 aria-hidden="true"></i>
 
-            <button
-              type="button"
-              class="pb__field-remove"
-              (click)="removeField(field)"
-              pTooltip="Remove"
-              tooltipPosition="top"
-              [attr.aria-label]="'Remove ' + field.name"
-            >
-              <i class="pi pi-times"></i>
-            </button>
+              <input
+                type="text"
+                class="cb__field-name"
+                [ngModel]="field.name"
+                (ngModelChange)="renameField(field, $event)"
+                (focus)="selectAll($event)"
+                [attr.aria-label]="'Rename ' + field.name"
+              />
+
+              <button
+                type="button"
+                class="cb__field-lock"
+                [class.cb__field-lock--editable]="!field.readOnly"
+                (click)="toggleReadOnly(field)"
+                [pTooltip]="field.readOnly ? 'Read only — click to make editable' : 'Editable — click to lock'"
+                tooltipPosition="top"
+              >
+                <i class="pi" [ngClass]="field.readOnly ? 'pi-lock' : 'pi-pencil'"></i>
+                <span>{{ field.readOnly ? 'Read Only' : 'Editable' }}</span>
+              </button>
+
+              <span *ngIf="parseMethod === 'fixed-length'" class="cb__field-range">
+                <input
+                  type="number"
+                  class="cb__field-pos"
+                  min="1"
+                  [ngModel]="field.start"
+                  (ngModelChange)="updateStart(field, $event)"
+                  (focus)="selectAll($event)"
+                />
+                <i class="pi pi-arrow-right"></i>
+                <input
+                  type="number"
+                  class="cb__field-pos"
+                  min="1"
+                  [ngModel]="field.end"
+                  (ngModelChange)="updateEnd(field, $event)"
+                  (focus)="selectAll($event)"
+                />
+              </span>
+
+              <button
+                type="button"
+                class="cb__field-remove"
+                (click)="removeField(field)"
+                pTooltip="Remove" tooltipPosition="top"
+                [attr.aria-label]="'Remove ' + field.name"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
           </div>
+
+          <button type="button" class="cb__add" (click)="addField()">
+            <i class="pi pi-plus-circle"></i>
+            <span>ADD Field</span>
+          </button>
         </div>
 
-        <!-- ADD Field button -->
-        <button type="button" class="pb__add" (click)="addField()">
-          <i class="pi pi-plus-circle"></i>
-          <span>ADD Field</span>
-        </button>
-
-        <!-- Sample scan preview -->
-        <div *ngIf="showPreview && fields.length" class="pb__preview">
-          <div class="pb__preview-label">Sample scan preview</div>
-
-          <div class="pb__preview-scan">
-            <span
-              *ngFor="let seg of previewSegments(); let i = index"
-              class="pb__preview-seg"
-              [class.pb__preview-seg--empty]="!seg"
-              [style.background]="seg ? segmentColor(i, 'bg') : null"
-              [style.color]="seg ? segmentColor(i, 'fg') : null"
-            >{{ seg || '—' }}</span>
+        <!-- None: single capture field -->
+        <div class="cb__group" *ngIf="parseMethod === 'none'">
+          <div class="cb__fields">
+            <div class="cb__field cb__field--single">
+              <i class="pi pi-th-large cb__field-grip" aria-hidden="true"></i>
+              <input
+                type="text"
+                class="cb__field-name"
+                [ngModel]="noneField.name"
+                (ngModelChange)="noneField.name = $event"
+                (focus)="selectAll($event)"
+                aria-label="Rename capture field"
+              />
+              <button
+                type="button"
+                class="cb__field-lock"
+                [class.cb__field-lock--editable]="!noneField.readOnly"
+                (click)="noneField.readOnly = !noneField.readOnly"
+                [pTooltip]="noneField.readOnly ? 'Read only — click to make editable' : 'Editable — click to lock'"
+                tooltipPosition="top"
+              >
+                <i class="pi" [ngClass]="noneField.readOnly ? 'pi-lock' : 'pi-pencil'"></i>
+                <span>{{ noneField.readOnly ? 'Read Only' : 'Editable' }}</span>
+              </button>
+            </div>
           </div>
-
-          <div class="pb__preview-interp">
-            <ng-container *ngFor="let pair of previewInterpolated(); let i = index; let last = last">
-              <span
-                class="pb__preview-key"
-                [style.color]="pair.empty ? null : segmentColor(i, 'fg')"
-              >{{ pair.label }}</span>
-              <span class="pb__preview-value"
-                    [class.pb__preview-value--empty]="pair.empty">
-                {{ pair.empty ? '—' : pair.value }}
-              </span>
-              <span *ngIf="!last" class="pb__preview-sep">·</span>
-            </ng-container>
+          <div class="cb__help cb__help--muted">
+            No parsing — the whole scan is captured into this single field.
           </div>
         </div>
 
@@ -199,7 +282,7 @@ export interface ParseField {
   styles: [`
     :host { display: block; }
 
-    .pb {
+    .cb {
       width: 100%;
       background: var(--c-surface-0);
       border: 1px solid var(--c-surface-400);
@@ -210,121 +293,179 @@ export interface ParseField {
       box-sizing: border-box;
     }
 
-    /* ── Header row ───────────────────────────────────────────────────────── */
-    .pb__head {
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    .cb__head {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
+      gap: 4px;
+      padding: 8px 10px 8px 6px;
+      background: var(--c-surface-100);
     }
-    .pb--enabled .pb__head {
-      border-bottom: 1px solid var(--c-surface-300);
+    .cb--collapsed .cb__head {
+      background: var(--c-surface-100);
     }
-
-    .pb__title {
-      font: var(--fw-semibold) var(--fs-base)/1.35 var(--font-sans);
-      color: var(--t-heading);
-    }
-
-    /* Toggle switch */
-    .pb__toggle {
+    .cb__chevron {
       display: inline-flex;
       align-items: center;
-      width: 36px;
-      height: 20px;
-      background: var(--c-surface-500);
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: transparent;
       border: none;
-      border-radius: 999px;
+      border-radius: 4px;
+      color: var(--t-body);
       cursor: pointer;
-      padding: 2px;
-      transition: background 0.18s;
+      font-size: 12px;
     }
-    .pb__toggle--on { background: var(--c-blue-500); }
-    .pb__toggle-thumb {
-      width: 16px;
-      height: 16px;
-      background: var(--c-surface-0);
-      border-radius: 50%;
-      transition: transform 0.18s;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.20);
-    }
-    .pb__toggle--on .pb__toggle-thumb { transform: translateX(16px); }
+    .cb__chevron:hover { background: var(--c-surface-200); }
 
-    /* ── Body ─────────────────────────────────────────────────────────────── */
-    .pb__body {
-      padding: 16px;
+    .cb__title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+    .cb__title-index {
+      font: var(--fw-semibold) var(--fs-base)/1.35 var(--font-sans);
+      color: var(--t-heading);
+      flex-shrink: 0;
+    }
+    .cb__title-input {
+      flex: 1 1 0;
+      min-width: 0;
+      width: 0;
+      padding: 3px 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      font: var(--fw-semibold) var(--fs-base)/1.35 var(--font-sans);
+      color: var(--t-heading);
+      cursor: text;
+      text-overflow: ellipsis;
+    }
+    .cb__title-input::placeholder {
+      color: var(--t-muted);
+      font-weight: var(--fw-semibold);
+    }
+    .cb__title-input:hover {
+      border-color: var(--c-surface-400);
+      background: var(--c-surface-0);
+    }
+    .cb__title-input:focus {
+      outline: none;
+      border-color: var(--c-blue-500);
+      background: var(--c-surface-0);
+      box-shadow: 0 0 0 3px rgba(36,116,187,0.15);
+    }
+
+    .cb__spacer { flex: 1; }
+
+    .cb__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--t-body);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .cb__icon:hover { background: var(--c-surface-200); color: var(--t-heading); }
+    .cb__icon--danger:hover { background: var(--c-red-100); color: var(--c-red-700); }
+    .cb__icon:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      background: transparent;
+    }
+
+    /* ── Body ────────────────────────────────────────────────────────────── */
+    .cb__body {
+      padding: 14px 16px 16px 16px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
 
-    .pb__row {
+    .cb__group {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cb__group--split {
+      flex-direction: row;
       gap: 12px;
     }
-    .pb__label {
+    .cb__col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+    .cb__label {
       font: var(--fw-semibold) var(--fs-sm)/1.35 var(--font-sans);
       color: var(--t-heading);
     }
 
-    .pb__select-wrap {
-      position: relative;
-      width: 160px;
-    }
-    .pb__select {
+    .cb__input {
       width: 100%;
-      padding: 8px 30px 8px 12px;
+      padding: 8px 12px;
       background: var(--c-surface-0);
       border: 1px solid var(--c-surface-500);
       border-radius: 6px;
       font: var(--fw-regular) var(--fs-sm)/1.35 var(--font-sans);
       color: var(--t-body);
-      cursor: pointer;
-      appearance: none;
+      box-sizing: border-box;
     }
-    .pb__select:focus {
+    .cb__input:focus {
       outline: none;
       border-color: var(--c-blue-500);
       box-shadow: 0 0 0 3px rgba(36,116,187,0.18);
     }
-    .pb__select-chevron {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-      font-size: 11px;
+    .cb__input--mono {
+      font-family: var(--font-mono);
+      text-align: center;
+    }
+
+    .cb__help {
+      font: var(--fw-regular) var(--fs-xs)/1.4 var(--font-sans);
       color: var(--t-muted);
     }
+    .cb__help--muted { font-style: italic; }
 
-    /* Separator input */
-    .pb__input--separator {
-      width: 56px;
-      padding: 8px 10px;
-      background: var(--c-surface-0);
-      border: 1px solid var(--c-surface-500);
+    /* ── Segmented parse-method control ──────────────────────────────────── */
+    .cb__seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--c-surface-100);
+      border: 1px solid var(--c-surface-400);
       border-radius: 6px;
-      text-align: center;
-      font-family: var(--font-mono);
-      font-size: var(--fs-base);
-      color: var(--t-heading);
+      padding: 3px;
+      gap: 2px;
     }
-    .pb__input--separator:focus {
-      outline: none;
-      border-color: var(--c-blue-500);
-      box-shadow: 0 0 0 3px rgba(36,116,187,0.18);
+    .cb__seg-btn {
+      padding: 7px 10px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      font: var(--fw-medium) var(--fs-sm)/1.35 var(--font-sans);
+      color: var(--t-body);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .cb__seg-btn:hover { color: var(--t-heading); }
+    .cb__seg-btn--active,
+    .cb__seg-btn--active:hover {
+      background: var(--c-bluegray-900);
+      color: var(--c-surface-0);
     }
 
-    /* ── Fields list ──────────────────────────────────────────────────────── */
-    .pb__fields-label {
+    /* ── Fields list ─────────────────────────────────────────────────────── */
+    .cb__fields-label {
       font: var(--fw-regular) var(--fs-xs)/1.35 var(--font-sans);
       color: var(--t-muted);
-      margin-top: 2px;
     }
 
-    .pb__fields {
+    .cb__fields {
       display: flex;
       flex-direction: column;
       background: var(--c-surface-100);
@@ -333,34 +474,32 @@ export interface ParseField {
       overflow: hidden;
     }
 
-    .pb__field {
+    .cb__field {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 9px 12px;
       border-bottom: 1px solid var(--c-surface-300);
       background: var(--c-surface-100);
-      transition: background 0.12s, transform 0.08s;
       cursor: grab;
+      transition: background 0.12s;
     }
-    .pb__field:active { cursor: grabbing; }
-    .pb__field:last-child { border-bottom: 0; }
-    .pb__field--dragging {
-      opacity: 0.4;
-      transform: scale(0.99);
-    }
-    .pb__field--drop-target {
+    .cb__field:active { cursor: grabbing; }
+    .cb__field:last-child { border-bottom: 0; }
+    .cb__field--single { cursor: default; }
+    .cb__field--dragging { opacity: 0.4; }
+    .cb__field--drop-target {
       background: var(--c-blue-50);
       box-shadow: inset 0 2px 0 var(--c-blue-500);
     }
 
-    .pb__field-grip {
+    .cb__field-grip {
       font-size: 11px;
       color: var(--c-surface-600);
       flex-shrink: 0;
     }
 
-    .pb__field-name {
+    .cb__field-name {
       flex: 1 1 0;
       min-width: 0;
       width: 0;
@@ -373,18 +512,18 @@ export interface ParseField {
       cursor: text;
       text-overflow: ellipsis;
     }
-    .pb__field-name:hover {
+    .cb__field-name:hover {
       border-color: var(--c-surface-400);
       background: var(--c-surface-0);
     }
-    .pb__field-name:focus {
+    .cb__field-name:focus {
       outline: none;
       border-color: var(--c-blue-500);
       background: var(--c-surface-0);
       box-shadow: 0 0 0 3px rgba(36,116,187,0.15);
     }
 
-    .pb__field-lock {
+    .cb__field-lock {
       display: inline-flex;
       align-items: center;
       gap: 4px;
@@ -397,21 +536,21 @@ export interface ParseField {
       cursor: pointer;
       flex-shrink: 0;
     }
-    .pb__field-lock:hover { background: var(--c-surface-200); }
-    .pb__field-lock--editable { color: var(--c-blue-700); }
-    .pb__field-lock i { font-size: 11px; }
+    .cb__field-lock:hover { background: var(--c-surface-200); }
+    .cb__field-lock--editable { color: var(--c-blue-700); }
+    .cb__field-lock i { font-size: 11px; }
 
-    .pb__field-range {
+    .cb__field-range {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font: var(--fw-regular) var(--fs-sm)/1 var(--font-sans);
-      color: var(--t-muted);
       flex-shrink: 0;
     }
-    .pb__field-range i { font-size: 10px; }
-
-    .pb__field-pos {
+    .cb__field-range i {
+      font-size: 10px;
+      color: var(--t-muted);
+    }
+    .cb__field-pos {
       width: 38px;
       padding: 3px 4px;
       background: var(--c-surface-0);
@@ -423,18 +562,15 @@ export interface ParseField {
       color: var(--t-heading);
       -moz-appearance: textfield;
     }
-    .pb__field-pos::-webkit-outer-spin-button,
-    .pb__field-pos::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    .pb__field-pos:focus {
+    .cb__field-pos::-webkit-outer-spin-button,
+    .cb__field-pos::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .cb__field-pos:focus {
       outline: none;
       border-color: var(--c-blue-500);
       box-shadow: 0 0 0 2px rgba(36,116,187,0.18);
     }
 
-    .pb__field-remove {
+    .cb__field-remove {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -448,13 +584,13 @@ export interface ParseField {
       font-size: 12px;
       flex-shrink: 0;
     }
-    .pb__field-remove:hover {
+    .cb__field-remove:hover {
       background: var(--c-red-100);
       color: var(--c-red-700);
     }
 
-    /* ── ADD Field button ─────────────────────────────────────────────────── */
-    .pb__add {
+    /* ── ADD Field ───────────────────────────────────────────────────────── */
+    .cb__add {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -468,136 +604,86 @@ export interface ParseField {
       font: var(--fw-semibold) var(--fs-sm)/1.2 var(--font-sans);
       cursor: pointer;
       transition: background 0.12s, color 0.12s;
+      margin-top: 4px;
     }
-    .pb__add:hover {
+    .cb__add:hover {
       background: var(--c-blue-50);
       color: var(--c-blue-700);
     }
-    .pb__add i { font-size: 14px; }
-
-    /* ── Sample scan preview ──────────────────────────────────────────────── */
-    .pb__preview {
-      padding: 12px 14px;
-      background: var(--c-blue-50);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .pb__preview-label {
-      font: var(--fw-semibold) var(--fs-sm)/1.35 var(--font-sans);
-      color: var(--t-heading);
-    }
-    .pb__preview-scan {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      font-family: var(--font-mono);
-      font-size: var(--fs-sm);
-    }
-    .pb__preview-seg {
-      padding: 2px 6px;
-      border-radius: 3px;
-    }
-    .pb__preview-seg--empty {
-      background: var(--c-surface-200);
-      color: var(--t-muted);
-      border: 1px dashed var(--c-surface-500);
-    }
-    .pb__preview-value--empty {
-      color: var(--t-muted);
-      font-family: var(--font-sans);
-      font-style: italic;
-    }
-    .pb__preview-interp .pb__preview-key { color: var(--t-muted); }
-    .pb__preview-interp {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      gap: 6px;
-      font: var(--fw-regular) var(--fs-sm)/1.4 var(--font-sans);
-      color: var(--t-body);
-    }
-    .pb__preview-key {
-      font-weight: var(--fw-semibold);
-    }
-    .pb__preview-value {
-      font-family: var(--font-mono);
-      color: var(--t-heading);
-    }
-    .pb__preview-sep { color: var(--t-muted); }
+    .cb__add i { font-size: 14px; }
   `],
 })
-export class ParseBarcodeComponent {
-  // ─── Inputs ─────────────────────────────────────────────────────────────────
-  @Input() enabled: boolean = false;
-  @Input() splitMethod: SplitMethod = 'fixed-length';
-  @Input() separator: string = '|';
-  @Input() fields: ParseField[] = [];
-  /** Sample scanned barcode to demo the preview (e.g. "0048210093 0150"). */
-  @Input() sampleScan: string = '004821 0093 0150';
-  @Input() showPreview: boolean = true;
+export class ConfigureBarcodeComponent {
+  // ─── Header ────────────────────────────────────────────────────────────────
+  /** Display number (usually the item's index in the parent list, 1-based). */
+  @Input() index: number = 1;
+  @Input() expanded: boolean = true;
+  /** Disable the up arrow (e.g. when this is the first item in a parent list). */
+  @Input() canMoveUp: boolean = true;
+  /** Disable the down arrow (e.g. when this is the last item in a parent list). */
+  @Input() canMoveDown: boolean = true;
+  /** Editable label rendered next to the index. Defaults to "Configure Barcode". */
+  @Input() label: string = 'Configure Barcode';
 
-  // ─── Outputs ────────────────────────────────────────────────────────────────
-  @Output() enabledChange     = new EventEmitter<boolean>();
-  @Output() splitMethodChange = new EventEmitter<SplitMethod>();
-  @Output() separatorChange   = new EventEmitter<string>();
-  @Output() fieldsChange      = new EventEmitter<ParseField[]>();
-  @Output() addRequested      = new EventEmitter<void>();
+  // ─── Config inputs ─────────────────────────────────────────────────────────
+  @Input() matchPrefix: string = '';
+  @Input() parseMethod: ParseMethod = 'fixed-length';
+  @Input() fieldDelimiter: string = '|';
+  @Input() keyValueDelimiter: string = '=';
+  @Input() fields: ParseField[] = [];
+  /** Displayed when parseMethod === 'none'. Held on the component so toggling
+   * away from 'none' and back preserves the user's name/lock choice. */
+  @Input() noneField: ParseField = { id: 'capture', name: 'Value', readOnly: true };
+
+  // ─── Outputs ───────────────────────────────────────────────────────────────
+  @Output() expandedChange          = new EventEmitter<boolean>();
+  @Output() labelChange             = new EventEmitter<string>();
+  @Output() matchPrefixChange       = new EventEmitter<string>();
+  @Output() parseMethodChange       = new EventEmitter<ParseMethod>();
+  @Output() fieldDelimiterChange    = new EventEmitter<string>();
+  @Output() keyValueDelimiterChange = new EventEmitter<string>();
+  @Output() fieldsChange            = new EventEmitter<ParseField[]>();
+  @Output() moveUp                  = new EventEmitter<void>();
+  @Output() moveDown                = new EventEmitter<void>();
+  @Output() deleteRequested         = new EventEmitter<void>();
 
   trackById = (_: number, f: ParseField) => f.id;
 
-  // ─── Mutators ───────────────────────────────────────────────────────────────
-  setEnabled(v: boolean)        { this.enabled = v; this.enabledChange.emit(v); }
-  setSplitMethod(v: SplitMethod) { this.splitMethod = v; this.splitMethodChange.emit(v); }
-  setSeparator(v: string)        { this.separator = v || '|'; this.separatorChange.emit(this.separator); }
-
-  toggleReadOnly(f: ParseField) {
-    f.readOnly = !f.readOnly;
-    this.fieldsChange.emit(this.fields);
+  /** Select the input's full contents on focus so typing replaces the value. */
+  selectAll(e: FocusEvent) {
+    (e.target as HTMLInputElement)?.select?.();
   }
 
-  renameField(f: ParseField, name: string) {
-    f.name = name;
-    this.fieldsChange.emit(this.fields);
-  }
+  // ─── Setters ───────────────────────────────────────────────────────────────
+  setExpanded(v: boolean)          { this.expanded = v; this.expandedChange.emit(v); }
+  setLabel(v: string)              { this.label = v; this.labelChange.emit(v); }
+  setMatchPrefix(v: string)        { this.matchPrefix = v; this.matchPrefixChange.emit(v); }
+  setParseMethod(v: ParseMethod)   { this.parseMethod = v; this.parseMethodChange.emit(v); }
+  setFieldDelimiter(v: string)     { this.fieldDelimiter = v || '|'; this.fieldDelimiterChange.emit(this.fieldDelimiter); }
+  setKeyValueDelimiter(v: string)  { this.keyValueDelimiter = v || '='; this.keyValueDelimiterChange.emit(this.keyValueDelimiter); }
 
-  updateStart(f: ParseField, v: number) {
-    f.start = Math.max(1, +v || 1);
-    this.fieldsChange.emit(this.fields);
-  }
-  updateEnd(f: ParseField, v: number) {
-    f.end = Math.max(f.start ?? 1, +v || 1);
-    this.fieldsChange.emit(this.fields);
-  }
-
-  removeField(f: ParseField) {
-    this.fields = this.fields.filter(x => x.id !== f.id);
-    this.fieldsChange.emit(this.fields);
-  }
+  toggleReadOnly(f: ParseField)     { f.readOnly = !f.readOnly; this.fieldsChange.emit(this.fields); }
+  renameField(f: ParseField, n: string)    { f.name = n; this.fieldsChange.emit(this.fields); }
+  updateStart(f: ParseField, v: number)    { f.start = Math.max(1, +v || 1); this.fieldsChange.emit(this.fields); }
+  updateEnd(f: ParseField, v: number)      { f.end   = Math.max(f.start ?? 1, +v || 1); this.fieldsChange.emit(this.fields); }
+  removeField(f: ParseField)               { this.fields = this.fields.filter(x => x.id !== f.id); this.fieldsChange.emit(this.fields); }
 
   addField() {
     const idx = this.fields.length + 1;
-    // For fixed-length, suggest a 4-char slice starting right after the last
-    // field, clamped to a reasonable distance from the sample length so the
-    // user can see where the new field would land in the preview.
-    const sampleLen = this.sampleScan.replace(/\s+/g, '').length;
-    const lastEnd  = this.fields.reduce((m, f) => Math.max(m, f.end ?? 0), 0);
-    const start    = lastEnd > 0 ? lastEnd + 1 : 1;
-    const end      = Math.max(start, Math.min(start + 3, sampleLen || start + 3));
+    const lastEnd = this.fields.reduce((m, f) => Math.max(m, f.end ?? 0), 0);
+    const start   = lastEnd > 0 ? lastEnd + 1 : 1;
     const newField: ParseField = {
       id: 'f-' + idx + '-' + Math.floor(performance.now() % 100000),
       name: 'Field ' + idx,
       readOnly: true,
-      start: this.splitMethod === 'fixed-length' ? start : undefined,
-      end:   this.splitMethod === 'fixed-length' ? end   : undefined,
+      start: this.parseMethod === 'fixed-length' ? start : undefined,
+      end:   this.parseMethod === 'fixed-length' ? start + 3 : undefined,
     };
     this.fields = [...this.fields, newField];
     this.fieldsChange.emit(this.fields);
-    this.addRequested.emit();
   }
 
-  // ─── Drag-and-drop reordering ───────────────────────────────────────────────
+  // ─── Drag-and-drop reordering ──────────────────────────────────────────────
   draggedIndex: number = -1;
   dropTargetIndex: number = -1;
 
@@ -613,9 +699,7 @@ export class ParseBarcodeComponent {
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
     this.dropTargetIndex = i;
   }
-  onDragLeave(i: number) {
-    if (this.dropTargetIndex === i) this.dropTargetIndex = -1;
-  }
+  onDragLeave(i: number) { if (this.dropTargetIndex === i) this.dropTargetIndex = -1; }
   onDrop(e: DragEvent, dropIndex: number) {
     e.preventDefault();
     const from = this.draggedIndex;
@@ -627,81 +711,40 @@ export class ParseBarcodeComponent {
     this.fieldsChange.emit(this.fields);
     this.onDragEnd();
   }
-  onDragEnd() {
-    this.draggedIndex = -1;
-    this.dropTargetIndex = -1;
-  }
-
-  // ─── Preview computation ────────────────────────────────────────────────────
-  previewSegments(): string[] {
-    if (this.splitMethod === 'delimiter') {
-      const sep = this.separator || '|';
-      const parts = this.sampleScan.split(sep);
-      // Always emit one entry per field (empty string when sample has fewer
-      // segments than fields) so the preview matches the field list 1:1.
-      return this.fields.map((_, i) => parts[i] ?? '');
-    }
-    // Fixed-length: slice the sample (ignoring whitespace) by start/end indices.
-    const raw = this.sampleScan.replace(/\s+/g, '');
-    return this.fields.map(f => {
-      if (f.start == null || f.end == null) return '';
-      if (f.start - 1 >= raw.length) return '';
-      return raw.slice(f.start - 1, f.end);
-    });
-  }
-
-  previewInterpolated(): { label: string; value: string; empty: boolean }[] {
-    const segs = this.previewSegments();
-    return this.fields.map((f, i) => ({
-      label: f.name + ' #',
-      value: segs[i] ?? '',
-      empty: !segs[i],
-    }));
-  }
-
-  /** Pastel background + matching foreground for each segment, by index. */
-  segmentColor(i: number, kind: 'bg' | 'fg'): string {
-    const palette = [
-      { bg: 'var(--c-green-100)',  fg: 'var(--c-green-800)'  },
-      { bg: 'var(--c-yellow-100)', fg: 'var(--c-orange-800)' },
-      { bg: 'var(--c-red-100)',    fg: 'var(--c-red-700)'    },
-      { bg: 'var(--c-purple-100)', fg: 'var(--c-purple-800)' },
-      { bg: 'var(--c-cyan-100)',   fg: 'var(--c-cyan-800)'   },
-      { bg: 'var(--c-pink-100)',   fg: 'var(--c-pink-700)'   },
-    ];
-    return palette[i % palette.length][kind];
-  }
+  onDragEnd() { this.draggedIndex = -1; this.dropTargetIndex = -1; }
 }
 
-// ─── Story wrapper — locks the panel to a fixed parent width so adding fields,
-// editing names, or collapsing the toggle never resizes the component itself.
-// In a real app the parent (a side panel, a drawer, etc.) provides this width.
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Story wrapper — locks the panel to a fixed parent width ─────────────────
 @Component({
-  selector: 'uw-parse-barcode-host',
+  selector: 'uw-configure-barcode-host',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipModule, ParseBarcodeComponent],
+  imports: [CommonModule, FormsModule, TooltipModule, ConfigureBarcodeComponent],
   template: `
     <div [style.width]="hostWidth" [style.padding]="hostPadding">
-      <uw-parse-barcode
-        [enabled]="enabled"
-        [splitMethod]="splitMethod"
-        [separator]="separator"
+      <uw-configure-barcode
+        [index]="index"
+        [expanded]="expanded"
+        [label]="label"
+        [matchPrefix]="matchPrefix"
+        [parseMethod]="parseMethod"
+        [fieldDelimiter]="fieldDelimiter"
+        [keyValueDelimiter]="keyValueDelimiter"
         [fields]="fields"
-        [sampleScan]="sampleScan"
-        [showPreview]="showPreview"
-      ></uw-parse-barcode>
+        [noneField]="noneField"
+      ></uw-configure-barcode>
     </div>
   `,
 })
-export class ParseBarcodeHostComponent {
-  @Input() enabled: boolean = false;
-  @Input() splitMethod: SplitMethod = 'fixed-length';
-  @Input() separator: string = '|';
+export class ConfigureBarcodeHostComponent {
+  @Input() index: number = 1;
+  @Input() expanded: boolean = true;
+  @Input() label: string = 'Configure Barcode';
+  @Input() matchPrefix: string = '';
+  @Input() parseMethod: ParseMethod = 'fixed-length';
+  @Input() fieldDelimiter: string = '|';
+  @Input() keyValueDelimiter: string = '=';
   @Input() fields: ParseField[] = [];
-  @Input() sampleScan: string = '004821 0093 0150';
-  @Input() showPreview: boolean = true;
-  /** Story-only — the parent container the panel sits inside. */
+  @Input() noneField: ParseField = { id: 'capture', name: 'Value', readOnly: true };
   @Input() hostWidth: string = '420px';
   @Input() hostPadding: string = '0';
 }
@@ -714,126 +757,141 @@ const FIXED_LENGTH_FIELDS: ParseField[] = [
 ];
 
 const DELIMITER_FIELDS: ParseField[] = [
-  { id: 'f-account',  name: 'Account',  readOnly: true  },
-  { id: 'f-store',    name: 'Store',    readOnly: false },
-  { id: 'f-quantity', name: 'Quantity', readOnly: true  },
+  { id: 'f-account',  name: 'Account#',  readOnly: true },
+  { id: 'f-store',    name: 'Store#',    readOnly: true },
+  { id: 'f-quantity', name: 'Quantity',  readOnly: true },
 ];
 
 // ─── Meta ─────────────────────────────────────────────────────────────────────
-const meta: Meta<ParseBarcodeHostComponent> = {
-  title: 'User Workflow/Parse Barcode',
-  component: ParseBarcodeHostComponent,
+const meta: Meta<ConfigureBarcodeHostComponent> = {
+  title: 'User Workflow/Configure Barcode',
+  component: ConfigureBarcodeHostComponent,
   tags: ['autodocs'],
-  decorators: [moduleMetadata({ imports: [FormsModule, TooltipModule, ParseBarcodeComponent] })],
+  decorators: [moduleMetadata({ imports: [FormsModule, TooltipModule, ConfigureBarcodeComponent] })],
   parameters: {
     layout: 'centered',
     docs: {
       description: {
         component: `
-Configures how a raw barcode scan is split into structured fields without writing code.
+A single **Configure Barcode** block. Multiple can be stacked on a parent page (the parent supplies the \`index\` and handles \`moveUp\`, \`moveDown\`, and \`deleteRequested\`).
 
-**States**
-- Toggle off — only the title row is visible (one-line collapsed control).
-- Toggle on, no fields — split method picker + ADD Field call-to-action.
-- Toggle on with fields — Fixed-length or Delimiter mode plus a live preview that colour-codes each parsed segment.
+**Header** — numbered title, expand/collapse chevron, move up / move down / delete controls.
 
-**Two split methods**
+**Match By Prefix** — optional. When several barcodes could fill the same field, the parser only applies this configuration to scans that begin with the prefix.
+
+**Parse methods**
 - \`fixed-length\` — slice the scan by 1-based character positions (\`start\` → \`end\`).
-- \`delimiter\` — split by a separator character (defaults to \`|\`).
+- \`delimiter\` — split by a Field Delimiter, then optionally split each pair by a Key Value Delimiter. Field names act as keys (\`Account=123|Store=456\`).
+- \`none\` — no parsing; capture the entire scan into a single field.
 
-**Field locking** — each field is either *Read Only* (driver sees it but can't edit) or *Editable* (driver can override at scan time). Click the lock chip to toggle.
+**Field lock** — each field is Read Only or Editable. Click the chip to toggle.
 `,
       },
     },
   },
   argTypes: {
-    enabled:     { control: 'boolean' },
-    splitMethod: { control: 'inline-radio', options: ['fixed-length', 'delimiter'] },
-    separator:   { control: 'text' },
-    sampleScan:  { control: 'text' },
-    showPreview: { control: 'boolean' },
-    fields:      { control: 'object' },
-    hostWidth:   { control: 'text' },
-    hostPadding: { control: 'text' },
+    index:             { control: 'number' },
+    expanded:          { control: 'boolean' },
+    matchPrefix:       { control: 'text' },
+    parseMethod:       { control: 'inline-radio', options: ['fixed-length', 'delimiter', 'none'] },
+    fieldDelimiter:    { control: 'text' },
+    keyValueDelimiter: { control: 'text' },
+    fields:            { control: 'object' },
+    hostWidth:         { control: 'text' },
+    hostPadding:       { control: 'text' },
   },
 };
 
 export default meta;
-type Story = StoryObj<ParseBarcodeHostComponent>;
+type Story = StoryObj<ConfigureBarcodeHostComponent>;
 
-// ─── Stories ─────────────────────────────────────────────────────────────────
 const DEFAULT_WIDTH = '420px';
 
-export const Off: Story = {
+// ─── Stories ─────────────────────────────────────────────────────────────────
+export const Collapsed: Story = {
   args: {
-    enabled: false,
-    splitMethod: 'fixed-length',
-    separator: '|',
-    fields: [],
-    sampleScan: '004821 0093 0150',
-    showPreview: true,
+    index: 1,
+    expanded: false,
+    parseMethod: 'fixed-length',
+    fields: [...FIXED_LENGTH_FIELDS],
     hostWidth: DEFAULT_WIDTH,
   },
   parameters: {
-    docs: { description: { story: 'Disabled state — only the title row + toggle is visible. Width stays locked to the parent.' } },
-  },
-};
-
-export const OnEmpty: Story = {
-  args: {
-    enabled: true,
-    splitMethod: 'fixed-length',
-    separator: '|',
-    fields: [],
-    sampleScan: '004821 0093 0150',
-    showPreview: true,
-    hostWidth: DEFAULT_WIDTH,
-  },
-  parameters: {
-    docs: { description: { story: 'Toggle on, no fields yet — split-method picker + ADD Field is the entry point.' } },
+    docs: { description: { story: 'Collapsed — only the numbered header row is visible. Click the chevron to expand.' } },
   },
 };
 
 export const FixedLength: Story = {
   args: {
-    enabled: true,
-    splitMethod: 'fixed-length',
-    separator: '|',
+    index: 1,
+    expanded: true,
+    matchPrefix: '',
+    parseMethod: 'fixed-length',
     fields: [...FIXED_LENGTH_FIELDS],
-    sampleScan: '0048210093 0150',
-    showPreview: true,
     hostWidth: DEFAULT_WIDTH,
   },
   parameters: {
-    docs: { description: { story: 'Fixed-length parsing: 14-char scan split into Account (1-6), Store (7-10), Quantity (11-14). The preview colour-codes each slice and the interpolated line below.' } },
+    docs: { description: { story: 'Fixed-length parsing: three fields sliced from the 14-character scan.' } },
   },
 };
 
 export const Delimiter: Story = {
   args: {
-    enabled: true,
-    splitMethod: 'delimiter',
-    separator: '|',
+    index: 1,
+    expanded: true,
+    matchPrefix: 'ACCT',
+    parseMethod: 'delimiter',
+    fieldDelimiter: '|',
+    keyValueDelimiter: '=',
     fields: [...DELIMITER_FIELDS],
-    sampleScan: '004821|0093|0150',
-    showPreview: true,
     hostWidth: DEFAULT_WIDTH,
   },
   parameters: {
-    docs: { description: { story: 'Delimiter parsing using `|` as the separator. The middle field is marked Editable so the driver can override at scan time.' } },
+    docs: { description: { story: 'Delimiter parsing with a key/value inner delimiter. Field names act as keys the parser looks up in each pair (`Account=004821|Store=0093|Quantity=0150`).' } },
   },
 };
 
-export const NoPreview: Story = {
+export const None: Story = {
   args: {
-    enabled: true,
-    splitMethod: 'fixed-length',
-    separator: '|',
-    fields: [...FIXED_LENGTH_FIELDS],
-    showPreview: false,
+    index: 1,
+    expanded: true,
+    parseMethod: 'none',
+    noneField: { id: 'capture', name: 'Account#', readOnly: true },
     hostWidth: DEFAULT_WIDTH,
   },
   parameters: {
-    docs: { description: { story: 'Configuration view without the sample scan preview — when the parent panel has limited vertical space.' } },
+    docs: { description: { story: '`None` — no parsing. The entire scan is captured into a single field.' } },
+  },
+};
+
+export const NoFields: Story = {
+  args: {
+    index: 1,
+    expanded: true,
+    parseMethod: 'fixed-length',
+    fields: [],
+    hostWidth: DEFAULT_WIDTH,
+  },
+  parameters: {
+    docs: { description: { story: 'Fresh configuration — parse method selected, no fields yet. ADD Field is the entry point.' } },
+  },
+};
+
+export const SecondInList: Story = {
+  args: {
+    index: 2,
+    expanded: true,
+    matchPrefix: 'SHIP',
+    parseMethod: 'delimiter',
+    fieldDelimiter: '|',
+    keyValueDelimiter: '=',
+    fields: [
+      { id: 'f-bol', name: 'BOL#',   readOnly: true },
+      { id: 'f-pro', name: 'PRO#',   readOnly: false },
+    ],
+    hostWidth: DEFAULT_WIDTH,
+  },
+  parameters: {
+    docs: { description: { story: 'Shows how the header number changes when the parent list places this config at index 2. The middle field is Editable so the driver can override at scan time.' } },
   },
 };

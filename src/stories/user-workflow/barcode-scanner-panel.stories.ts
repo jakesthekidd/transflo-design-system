@@ -41,7 +41,7 @@ interface BarcodeConfig {
 let uid = 0;
 const newBarcode = (): BarcodeConfig => ({
   id: 'bc-' + (++uid) + '-' + Math.floor(performance.now() % 100000),
-  label: 'Configure Barcode',
+  label: '',   // empty → the card shows its per-index placeholder ("Configure Barcode 2")
   expanded: true,          // new barcodes open expanded (per confirmed spec)
   matchPrefix: '',
   parseMethod: 'none',
@@ -67,6 +67,7 @@ const newBarcode = (): BarcodeConfig => ({
       [width]="width"
       [height]="height"
       [defineActionOpen]="defineActionOpen"
+      [settingsOpen]="settingsOpen"
       (save)="onSave()"
       (closed)="onClose()"
     >
@@ -287,6 +288,7 @@ export class BarcodeScannerPanelComponent {
   @Input() height: string = '100%';
   @Input() stepName: string = '{Step Name}';
   @Input() defineActionOpen: boolean = true;
+  @Input() settingsOpen: boolean = true;
 
   // ─── Define Action state ───────────────────────────────────────────────────
   @Input() required: boolean = false;   // rendered disabled to match the Figma
@@ -375,7 +377,7 @@ export class BarcodeScannerPanelHostComponent {
 // ─── Preset barcode configurations for stories ───────────────────────────────
 const SINGLE: BarcodeConfig[] = [{
   id: 'bc-single',
-  label: 'Configure Barcode',
+  label: '',
   expanded: false,
   matchPrefix: '',
   parseMethod: 'none',

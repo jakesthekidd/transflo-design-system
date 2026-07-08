@@ -65,12 +65,10 @@ export interface ParseField {
             (ngModelChange)="setLabel($event)"
             (click)="$event.stopPropagation()"
             (focus)="selectAll($event)"
-            placeholder="Configure Barcode"
+            [placeholder]="'Configure Barcode ' + index"
             aria-label="Configuration name"
           />
         </span>
-
-        <span class="cb__spacer"></span>
 
         <button type="button" class="cb__icon"
                 [disabled]="!canMoveUp"
@@ -359,8 +357,6 @@ export interface ParseField {
       box-shadow: 0 0 0 3px rgba(36,116,187,0.15);
     }
 
-    .cb__spacer { flex: 1; }
-
     .cb__icon {
       display: inline-flex;
       align-items: center;
@@ -622,8 +618,9 @@ export class ConfigureBarcodeComponent {
   @Input() canMoveUp: boolean = true;
   /** Disable the down arrow (e.g. when this is the last item in a parent list). */
   @Input() canMoveDown: boolean = true;
-  /** Editable label rendered next to the index. Defaults to "Configure Barcode". */
-  @Input() label: string = 'Configure Barcode';
+  /** Editable label rendered next to the index. When empty, the card shows a
+   * per-index placeholder ("Configure Barcode 1") so unnamed cards stay distinguishable. */
+  @Input() label: string = '';
 
   // ─── Config inputs ─────────────────────────────────────────────────────────
   @Input() matchPrefix: string = '';
@@ -738,7 +735,7 @@ export class ConfigureBarcodeComponent {
 export class ConfigureBarcodeHostComponent {
   @Input() index: number = 1;
   @Input() expanded: boolean = true;
-  @Input() label: string = 'Configure Barcode';
+  @Input() label: string = '';
   @Input() matchPrefix: string = '';
   @Input() parseMethod: ParseMethod = 'fixed-length';
   @Input() fieldDelimiter: string = '|';

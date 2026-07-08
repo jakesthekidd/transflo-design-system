@@ -26,6 +26,17 @@ import { TooltipModule } from 'primeng/tooltip';
 
 export type ParseMethod = 'fixed-length' | 'delimiter' | 'none';
 
+export type Symbology = 'code128' | 'code39' | 'codabar' | 'pdf417' | 'qr';
+
+/** Symbology options with display labels for the dropdown. */
+export const SYMBOLOGY_OPTIONS: { value: Symbology; label: string }[] = [
+  { value: 'code128', label: 'Code 128' },
+  { value: 'code39',  label: 'Code 39'  },
+  { value: 'codabar', label: 'Codabar'  },
+  { value: 'pdf417',  label: 'PDF417'   },
+  { value: 'qr',      label: 'QR'       },
+];
+
 export interface ParseField {
   id: string;
   name: string;
@@ -105,6 +116,23 @@ export interface ParseField {
           />
           <div class="cb__help">
             Optional. Use a prefix when several barcodes could fill the wrong field.
+          </div>
+        </div>
+
+        <!-- Symbology -->
+        <div class="cb__group">
+          <label class="cb__label">Symbology</label>
+          <div class="cb__select-wrap">
+            <select
+              class="cb__select"
+              [ngModel]="symbology"
+              (ngModelChange)="setSymbology($event)"
+            >
+              <option *ngFor="let opt of symbologyOptions" [value]="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <i class="pi pi-chevron-down cb__select-chevron"></i>
           </div>
         </div>
 
@@ -417,6 +445,35 @@ export interface ParseField {
       border-color: var(--c-blue-500);
       box-shadow: 0 0 0 3px rgba(36,116,187,0.18);
     }
+
+    /* Select (Symbology) */
+    .cb__select-wrap { position: relative; width: 100%; }
+    .cb__select {
+      width: 100%;
+      padding: 8px 34px 8px 12px;
+      background: var(--c-surface-0);
+      border: 1px solid var(--c-surface-500);
+      border-radius: 6px;
+      font: var(--fw-regular) var(--fs-sm)/1.35 var(--font-sans);
+      color: var(--t-body);
+      cursor: pointer;
+      appearance: none;
+      box-sizing: border-box;
+    }
+    .cb__select:focus {
+      outline: none;
+      border-color: var(--c-blue-500);
+      box-shadow: 0 0 0 3px rgba(36,116,187,0.18);
+    }
+    .cb__select-chevron {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 11px;
+      color: var(--t-muted);
+    }
     .cb__input--mono {
       font-family: var(--font-mono);
       text-align: center;
@@ -624,6 +681,7 @@ export class ConfigureBarcodeComponent {
 
   // ─── Config inputs ─────────────────────────────────────────────────────────
   @Input() matchPrefix: string = '';
+  @Input() symbology: Symbology = 'code128';
   @Input() parseMethod: ParseMethod = 'fixed-length';
   @Input() fieldDelimiter: string = '|';
   @Input() keyValueDelimiter: string = '=';
@@ -632,10 +690,14 @@ export class ConfigureBarcodeComponent {
    * away from 'none' and back preserves the user's name/lock choice. */
   @Input() noneField: ParseField = { id: 'capture', name: 'Value', readOnly: true };
 
+  /** Dropdown options — exposed so the template can iterate them. */
+  symbologyOptions = SYMBOLOGY_OPTIONS;
+
   // ─── Outputs ───────────────────────────────────────────────────────────────
   @Output() expandedChange          = new EventEmitter<boolean>();
   @Output() labelChange             = new EventEmitter<string>();
   @Output() matchPrefixChange       = new EventEmitter<string>();
+  @Output() symbologyChange         = new EventEmitter<Symbology>();
   @Output() parseMethodChange       = new EventEmitter<ParseMethod>();
   @Output() fieldDelimiterChange    = new EventEmitter<string>();
   @Output() keyValueDelimiterChange = new EventEmitter<string>();
@@ -655,6 +717,7 @@ export class ConfigureBarcodeComponent {
   setExpanded(v: boolean)          { this.expanded = v; this.expandedChange.emit(v); }
   setLabel(v: string)              { this.label = v; this.labelChange.emit(v); }
   setMatchPrefix(v: string)        { this.matchPrefix = v; this.matchPrefixChange.emit(v); }
+  setSymbology(v: Symbology)        { this.symbology = v; this.symbologyChange.emit(v); }
   setParseMethod(v: ParseMethod)   { this.parseMethod = v; this.parseMethodChange.emit(v); }
   setFieldDelimiter(v: string)     { this.fieldDelimiter = v || '|'; this.fieldDelimiterChange.emit(this.fieldDelimiter); }
   setKeyValueDelimiter(v: string)  { this.keyValueDelimiter = v || '='; this.keyValueDelimiterChange.emit(this.keyValueDelimiter); }
@@ -723,6 +786,7 @@ export class ConfigureBarcodeComponent {
         [expanded]="expanded"
         [label]="label"
         [matchPrefix]="matchPrefix"
+        [symbology]="symbology"
         [parseMethod]="parseMethod"
         [fieldDelimiter]="fieldDelimiter"
         [keyValueDelimiter]="keyValueDelimiter"
@@ -737,6 +801,7 @@ export class ConfigureBarcodeHostComponent {
   @Input() expanded: boolean = true;
   @Input() label: string = '';
   @Input() matchPrefix: string = '';
+  @Input() symbology: Symbology = 'code128';
   @Input() parseMethod: ParseMethod = 'fixed-length';
   @Input() fieldDelimiter: string = '|';
   @Input() keyValueDelimiter: string = '=';
@@ -790,6 +855,7 @@ A single **Configure Barcode** block. Multiple can be stacked on a parent page (
     index:             { control: 'number' },
     expanded:          { control: 'boolean' },
     matchPrefix:       { control: 'text' },
+    symbology:         { control: 'select', options: ['code128', 'code39', 'codabar', 'pdf417', 'qr'] },
     parseMethod:       { control: 'inline-radio', options: ['fixed-length', 'delimiter', 'none'] },
     fieldDelimiter:    { control: 'text' },
     keyValueDelimiter: { control: 'text' },

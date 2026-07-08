@@ -10,6 +10,7 @@ import {
   ConfigureBarcodeComponent,
   ParseField,
   ParseMethod,
+  Symbology,
 } from './parse-barcode.stories';
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ interface BarcodeConfig {
   label: string;
   expanded: boolean;
   matchPrefix: string;
+  symbology: Symbology;
   parseMethod: ParseMethod;
   fieldDelimiter: string;
   keyValueDelimiter: string;
@@ -44,6 +46,7 @@ const newBarcode = (): BarcodeConfig => ({
   label: '',   // empty → the card shows its per-index placeholder ("Configure Barcode 2")
   expanded: true,          // new barcodes open expanded (per confirmed spec)
   matchPrefix: '',
+  symbology: 'code128',
   parseMethod: 'none',
   fieldDelimiter: '|',
   keyValueDelimiter: '=',
@@ -139,6 +142,7 @@ const newBarcode = (): BarcodeConfig => ({
             [label]="bc.label"
             [expanded]="bc.expanded"
             [matchPrefix]="bc.matchPrefix"
+            [symbology]="bc.symbology"
             [parseMethod]="bc.parseMethod"
             [fieldDelimiter]="bc.fieldDelimiter"
             [keyValueDelimiter]="bc.keyValueDelimiter"
@@ -149,6 +153,7 @@ const newBarcode = (): BarcodeConfig => ({
             (expandedChange)="bc.expanded = $event"
             (labelChange)="bc.label = $event"
             (matchPrefixChange)="bc.matchPrefix = $event"
+            (symbologyChange)="bc.symbology = $event"
             (parseMethodChange)="bc.parseMethod = $event"
             (fieldDelimiterChange)="bc.fieldDelimiter = $event"
             (keyValueDelimiterChange)="bc.keyValueDelimiter = $event"
@@ -380,6 +385,7 @@ const SINGLE: BarcodeConfig[] = [{
   label: '',
   expanded: false,
   matchPrefix: '',
+  symbology: 'code128',
   parseMethod: 'none',
   fieldDelimiter: '|',
   keyValueDelimiter: '=',
@@ -392,6 +398,7 @@ const TWO_COLLAPSED: BarcodeConfig[] = [
     id: 'bc-1', label: 'Account label',
     expanded: false,
     matchPrefix: '',
+    symbology: 'code128',
     parseMethod: 'none',
     fieldDelimiter: '|', keyValueDelimiter: '=',
     fields: [],
@@ -401,6 +408,7 @@ const TWO_COLLAPSED: BarcodeConfig[] = [
     id: 'bc-2', label: 'Shipment label',
     expanded: false,
     matchPrefix: '',
+    symbology: 'code128',
     parseMethod: 'none',
     fieldDelimiter: '|', keyValueDelimiter: '=',
     fields: [],
@@ -413,6 +421,7 @@ const MIXED: BarcodeConfig[] = [
     id: 'bc-1', label: 'Simple capture',
     expanded: false,
     matchPrefix: '',
+    symbology: 'code128',
     parseMethod: 'none',
     fieldDelimiter: '|', keyValueDelimiter: '=',
     fields: [],
@@ -422,6 +431,7 @@ const MIXED: BarcodeConfig[] = [
     id: 'bc-2', label: 'Account label (delimited)',
     expanded: true,
     matchPrefix: 'ACCT',
+    symbology: 'code128',
     parseMethod: 'delimiter',
     fieldDelimiter: '|', keyValueDelimiter: '=',
     fields: [
@@ -438,6 +448,7 @@ const FIXED_LENGTH_EXPANDED: BarcodeConfig[] = [
     id: 'bc-1', label: 'Simple capture',
     expanded: false,
     matchPrefix: '',
+    symbology: 'code128',
     parseMethod: 'none',
     fieldDelimiter: '|', keyValueDelimiter: '=',
     fields: [],
@@ -447,6 +458,7 @@ const FIXED_LENGTH_EXPANDED: BarcodeConfig[] = [
     id: 'bc-2', label: 'Shipping label (fixed)',
     expanded: true,
     matchPrefix: '',
+    symbology: 'code128',
     parseMethod: 'fixed-length',
     fieldDelimiter: '|', keyValueDelimiter: '=',
     fields: [
@@ -553,6 +565,7 @@ export const ManyBarcodesScrolling: Story = {
               'Trailer seal', 'Dock stamp', 'Manifest', 'Return tag'][i] ?? 'Configure Barcode',
       expanded: false,
       matchPrefix: '',
+      symbology: 'code128' as const,
       parseMethod: 'none' as const,
       fieldDelimiter: '|', keyValueDelimiter: '=',
       fields: [],
